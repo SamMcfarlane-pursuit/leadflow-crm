@@ -1,0 +1,54 @@
+// This is your Prisma schema file.
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Lead {
+  id            String   @id @default(cuid())
+  email         String
+  phone         String
+  revenue       Float
+  businessName  String
+  timestamp     DateTime @default(now())
+  tier          String   // '100k_Under' | '101k_500k' | '500k_Plus'
+  temperature   String   // 'Hot' | 'Warm' | 'Lukewarm' | 'Cold'
+  score         Float
+  dncStatus     String   // 'SAFE' | 'RESTRICTED'
+  pipelineStage String   @default("New") // 'New' | 'Engagement' | 'Proposal' | 'Negotiation' | 'Closed'
+  state         String?
+  industry      String?
+  contactName   String?
+  session       String?  // JSON string of SessionData
+
+  logs    Log[]
+  actions Action[]
+}
+
+model Log {
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
+  level     String   // 'INFO' | 'WARN' | 'ERROR' | 'SUCCESS'
+  message   String
+  module    String   // 'API' | 'CORE' | 'HUBSPOT' | 'BREVO'
+
+  lead   Lead?   @relation(fields: [leadId], references: [id])
+  leadId String?
+}
+
+model Action {
+  id        String   @id @default(cuid())
+  type      String   // 'HUBSPOT_SYNC' | 'BREVO_EMAIL' | ...
+  status    String   // 'SUCCESS' | 'FAILURE' | 'SKIPPED' | 'PENDING'
+  message   String
+  timestamp DateTime @default(now())
+
+  lead   Lead   @relation(fields: [leadId], references: [id])
+  leadId String
+}
