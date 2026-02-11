@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useLeads } from '@/context/LeadContext';
-import { Plus, Bell, Sparkles } from 'lucide-react';
+import { Plus, Bell, Sparkles, RefreshCw, CloudDownload } from 'lucide-react';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 import RecentLeads from '@/components/RecentLeads';
 import AddLeadModal from '@/components/AddLeadModal';
@@ -11,7 +11,7 @@ import { SessionReplayModal } from '@/components/Placeholders';
 import { Lead } from '@/types';
 
 export default function DashboardView() {
-    const { leads, stats, addLead, addLog } = useLeads();
+    const { leads, stats, addLead, addLog, syncSheets, isSyncing, lastSyncTime } = useLeads();
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
     const [analyzingLead, setAnalyzingLead] = useState<{ lead: Lead; type: 'strategy' | 'email' } | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -66,6 +66,33 @@ export default function DashboardView() {
                             <span className="font-semibold text-emerald-600">{stats.hot}</span>
                             <span className="text-slate-400">hot</span>
                         </div>
+                    )}
+
+                    {/* Sheets Sync Button */}
+                    <button
+                        onClick={() => syncSheets(500)}
+                        disabled={isSyncing}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium transition-all disabled:opacity-50"
+                        style={{
+                            borderColor: 'rgba(128,235,162,0.4)',
+                            backgroundColor: isSyncing ? 'rgba(128,235,162,0.08)' : 'rgba(128,235,162,0.06)',
+                            color: '#2d8a54',
+                        }}
+                        title={lastSyncTime ? `Last synced: ${new Date(lastSyncTime).toLocaleTimeString()}` : 'Sync leads from Google Sheets'}
+                    >
+                        {isSyncing ? (
+                            <RefreshCw size={14} className="animate-spin" />
+                        ) : (
+                            <CloudDownload size={14} />
+                        )}
+                        <span className="hidden sm:inline">{isSyncing ? 'Syncing...' : 'Sync'}</span>
+                    </button>
+
+                    {/* Last Sync Indicator */}
+                    {lastSyncTime && !isSyncing && (
+                        <span className="hidden lg:inline text-[10px] text-slate-400">
+                            ⟳ {new Date(lastSyncTime).toLocaleTimeString()}
+                        </span>
                     )}
 
                     <button

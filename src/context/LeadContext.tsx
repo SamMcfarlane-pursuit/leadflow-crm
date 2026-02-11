@@ -12,6 +12,7 @@ import {
     LeadFilters,
     getLeadStats,
 } from '@/actions/leadActions';
+import { syncFromGoogleSheets, SyncResult } from '@/actions/sheetsSync';
 
 interface LeadStats {
     total: number;
@@ -48,6 +49,12 @@ interface LeadContextType {
     refreshLeads: () => Promise<void>;
     refreshStats: () => Promise<void>;
 
+    // Sheets Sync
+    syncSheets: (maxRows?: number) => Promise<SyncResult | null>;
+    isSyncing: boolean;
+    lastSyncTime: string | null;
+    lastSyncResult: SyncResult | null;
+
     // State
     isLoading: boolean;
 }
@@ -62,6 +69,11 @@ export const LeadProvider = ({ children }: { children: ReactNode }) => {
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [stats, setStats] = useState<LeadStats | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+
+    // Sheets sync state
+    const [isSyncing, setIsSyncing] = useState(false);
+    const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+    const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
 
     // Pagination state
     const [page, setPage] = useState(1);
@@ -176,6 +188,26 @@ export const LeadProvider = ({ children }: { children: ReactNode }) => {
         setLogs((prev) => [newLog, ...prev]);
     };
 
+    // Sync from Google Sheets
+    const syncSheets = useCallback(async (maxRows: number = 500): Promise<SyncResult | null> => {
+        if (isSyncing) return null;
+        setIsSyncing(true);
+        try {
+            const result = await syncFromGoogleSheets(maxRows);
+            setLastSyncResult(result);
+            if (result.success) {
+                setLastSyncTime(result.syncedAt);
+                await refreshLeads();
+            }
+            return result;
+        } catch (error) {
+            console.error('Sync failed:', error);
+            return null;
+        } finally {
+            setIsSyncing(false);
+        }
+    }, [isSyncing, refreshLeads]);
+
     return (
         <LeadContext.Provider value={{
             leads, logs, stats,
@@ -183,6 +215,7 @@ export const LeadProvider = ({ children }: { children: ReactNode }) => {
             filters, setFilters,
             addLead, bulkAdd, updateLeadStage, addLog,
             goToPage, refreshLeads, refreshStats,
+            syncSheets, isSyncing, lastSyncTime, lastSyncResult,
             isLoading,
         }}>
             {children}
