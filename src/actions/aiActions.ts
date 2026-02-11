@@ -139,6 +139,83 @@ export async function extractLeadsFromText(rawText: string): Promise<ExtractedLe
     }
 }
 
+/* ─── URL Scraping ─────────────────────────────────────────────────── */
+
+function isUrl(text: string): boolean {
+    const trimmed = text.trim();
+    // Single line that looks like a URL
+    if (trimmed.includes('\n')) return false;
+    return /^https?:\/\/.+/i.test(trimmed);
+}
+
+export async function scrapeUrlContent(url: string): Promise<{ text: string; title: string } | null> {
+    try {
+        const cleanUrl = url.trim();
+        if (!isUrl(cleanUrl)) return null;
+
+        const response = await fetch(cleanUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (compatible; LeadFlowBot/1.0)',
+                'Accept': 'text/html,application/xhtml+xml,text/plain,application/json',
+            },
+            signal: AbortSignal.timeout(15000), // 15s timeout
+        });
+
+        if (!response.ok) {
+            console.error(`URL fetch failed: ${response.status} ${response.statusText}`);
+            return null;
+        }
+
+        const contentType = response.headers.get('content-type') || '';
+        const raw = await response.text();
+
+        // JSON response — return as-is (could be API data)
+        if (contentType.includes('application/json')) {
+            return { text: raw.slice(0, 50000), title: cleanUrl };
+        }
+
+        // HTML — strip to readable text
+        let text = raw;
+
+        // Remove script and style blocks entirely
+        text = text.replace(/<script[\s\S]*?<\/script>/gi, '');
+        text = text.replace(/<style[\s\S]*?<\/style>/gi, '');
+        text = text.replace(/<nav[\s\S]*?<\/nav>/gi, '');
+        text = text.replace(/<footer[\s\S]*?<\/footer>/gi, '');
+        text = text.replace(/<header[\s\S]*?<\/header>/gi, '');
+
+        // Extract title
+        const titleMatch = raw.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+        const title = titleMatch ? titleMatch[1].trim() : cleanUrl;
+
+        // Convert table cells to tab-separated (preserves tabular data)
+        text = text.replace(/<\/th>\s*<th/gi, '\t');
+        text = text.replace(/<\/td>\s*<td/gi, '\t');
+        text = text.replace(/<\/tr>/gi, '\n');
+
+        // Convert block elements to newlines
+        text = text.replace(/<\/(p|div|li|h[1-6]|tr|br)[^>]*>/gi, '\n');
+        text = text.replace(/<br\s*\/?>/gi, '\n');
+
+        // Strip remaining HTML tags
+        text = text.replace(/<[^>]+>/g, ' ');
+
+        // Decode HTML entities
+        text = text.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ');
+
+        // Clean up whitespace
+        text = text.replace(/[ \t]+/g, ' ');
+        text = text.replace(/\n\s*\n/g, '\n');
+        text = text.split('\n').map(l => l.trim()).filter(Boolean).join('\n');
+
+        return { text: text.slice(0, 50000), title };
+    } catch (error) {
+        console.error('URL scrape failed:', error);
+        return null;
+    }
+}
+
 /* ─── Smart Import: Unified Processing ─────────────────────────────── */
 
 type ContentType = 'structured' | 'unstructured';

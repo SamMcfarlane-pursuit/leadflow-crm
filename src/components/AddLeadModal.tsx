@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Building, Mail, Phone, BadgeDollarSign, Info, X, FileJson, Copy, Upload, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Trash2, Loader2, FileText, Sparkles, FileSpreadsheet, Filter, Shield, ShieldAlert, ShieldCheck, SlidersHorizontal } from 'lucide-react';
 import { processLeadSimulation, processBatch, calculateTier, COMPLIANCE_CONFIG } from '../utils/ironGateLogic';
 import { Lead, LogEntry } from '../types';
-import { generateLeadScore, processSmartImport } from '@/actions/aiActions';
+import { generateLeadScore, processSmartImport, scrapeUrlContent } from '@/actions/aiActions';
 import type { ExtractedLead, SmartImportResult } from '@/actions/aiActions';
 import { useLeads } from '@/context/LeadContext';
 import * as XLSX from 'xlsx';
@@ -14,6 +14,12 @@ interface AddLeadModalProps {
 }
 
 type WizardStep = 'input' | 'map' | 'review';
+
+const isUrl = (text: string): boolean => {
+    const trimmed = text.trim();
+    if (trimmed.includes('\n')) return false;
+    return /^https?:\/\/.+/i.test(trimmed);
+};
 
 /* ─── Synonym Dictionary for Auto-Mapping ────────────────────────────── */
 type CrmField = 'businessName' | 'email' | 'revenue' | 'phone' | 'state' | 'industry' | 'contactName' | 'ignore';
@@ -268,8 +274,24 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ onLeadProcessed, addLog, on
         setErrorMsg(null);
         setImportWarnings([]);
         try {
+            let textToProcess = rawInput;
+
+            // URL Detection — scrape the page first
+            if (isUrl(rawInput.trim())) {
+                console.log("URL detected, scraping:", rawInput.trim());
+                const scraped = await scrapeUrlContent(rawInput.trim());
+                if (!scraped || !scraped.text) {
+                    setErrorMsg("Couldn't fetch that URL. Make sure the link is publicly accessible.");
+                    setIsProcessing(false);
+                    return;
+                }
+                console.log(`Scraped ${scraped.text.length} chars from: ${scraped.title}`);
+                textToProcess = scraped.text;
+                setImportWarnings([`Fetched content from: ${scraped.title}`]);
+            }
+
             console.log("Starting Smart Import processing...");
-            const result: SmartImportResult = await processSmartImport(rawInput);
+            const result: SmartImportResult = await processSmartImport(textToProcess);
 
             setProcessingMethod(result.method);
             setImportWarnings(result.warnings);
@@ -590,6 +612,7 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                                 { icon: <Mail size={12} />, label: 'Emails' },
                                                 { icon: <FileJson size={12} />, label: 'CSV / Excel' },
                                                 { icon: <FileText size={12} />, label: 'PDF / TXT' },
+                                                { icon: <ArrowRight size={12} />, label: 'URL Link' },
                                             ].map((s) => (
                                                 <span key={s.label} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[11px] font-medium border border-slate-200">
                                                     {s.icon} {s.label}
@@ -637,7 +660,7 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                                 value={rawInput}
                                                 onChange={(e) => { setRawInput(e.target.value); setUploadedFileName(null); }}
                                                 className="w-full h-full min-h-[180px] p-4 rounded-xl font-mono text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none resize-none bg-transparent"
-                                                placeholder={"Paste anything here:\n• Copy from Google Sheets or Excel\n• Paste email lists or contact info\n• Drop a CSV, TXT, or any text file\n• Paste raw lead data in any format\n\nAI will extract: Business Name, Email, Phone, Revenue, State, Industry, Contact Name"}
+                                                placeholder={"Paste anything here:\n• Copy from Google Sheets or Excel\n• Paste email lists or contact info\n• Drop a CSV, TXT, or any text file\n• Paste a URL link to a page with lead data\n• Paste raw lead data in any format\n\nAI will extract: Business Name, Email, Phone, Revenue, State, Industry, Contact Name"}
                                             />
                                         </div>
 
