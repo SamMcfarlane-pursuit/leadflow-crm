@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, BarChart3, KanbanSquare, Zap } from 'lucide-react';
+import { LayoutDashboard, BarChart3, KanbanSquare, Zap, ClipboardList, Settings } from 'lucide-react';
 import { UserButton } from "@clerk/nextjs";
 
 export const Sidebar = () => {
@@ -19,15 +19,27 @@ export const Sidebar = () => {
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl blur-lg opacity-40" />
                 </div>
                 <span className="text-lg font-bold tracking-tight text-white whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">
-                    LeadFlow<span className="text-indigo-400 ml-0.5">Pro</span>
+                    LeadFlow<span className="text-indigo-400 ml-0.5">CRM</span>
                 </span>
             </div>
 
-            {/* Navigation */}
-            <nav className="flex-1 space-y-1 px-2">
+            {/* Main Navigation */}
+            <div className="px-3 mb-2 opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">
+                <span className="text-[10px] uppercase font-bold text-slate-600 tracking-widest">Main</span>
+            </div>
+            <nav className="space-y-1 px-2">
                 <NavItem href="/dashboard" icon={<LayoutDashboard size={20} />} label="Dashboard" active={isActive('/dashboard')} />
                 <NavItem href="/pipeline" icon={<KanbanSquare size={20} />} label="Pipeline" active={isActive('/pipeline')} />
                 <NavItem href="/analytics" icon={<BarChart3 size={20} />} label="Analytics" active={isActive('/analytics')} />
+            </nav>
+
+            {/* Tools Section */}
+            <div className="px-3 mt-6 mb-2 opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">
+                <span className="text-[10px] uppercase font-bold text-slate-600 tracking-widest">Tools</span>
+            </div>
+            <nav className="space-y-1 px-2">
+                <NavItem href="/activity" icon={<ClipboardList size={20} />} label="Activity Log" active={isActive('/activity')} />
+                <NavItem href="/settings" icon={<Settings size={20} />} label="Settings" active={isActive('/settings')} />
             </nav>
 
             {/* Bottom Section */}

@@ -186,31 +186,79 @@ export async function generateDeepAnalysis(businessName: string, industry?: stri
 export type EmailDraftResult = {
     subject: string;
     body: string;
+    tone: string;
 };
 
-export async function generateEmailDraft(businessName: string, industry?: string, revenue?: number): Promise<EmailDraftResult | null> {
+export async function generateEmailDraft(
+    businessName: string,
+    contactName?: string,
+    industry?: string,
+    revenue?: number,
+    temperature?: 'Hot' | 'Warm' | 'Lukewarm' | 'Cold',
+    score?: number
+): Promise<EmailDraftResult | null> {
     if (!process.env.GEMINI_API_KEY) {
         return null;
     }
 
+    const toneGuides: Record<string, string> = {
+        Hot: `TONE: Confident and direct. This is a HIGH-VALUE lead (score ${score || '80+'}). 
+They are likely ready to buy. Be professional but assertive. Reference their industry success, propose a quick call or demo. 
+Use phrases like "I noticed your growth in...", "Teams like yours typically see...", "Would this week work for a quick 15-min call?"
+DO NOT be pushy or use fake urgency. Be genuinely helpful and specific.`,
+
+        Warm: `TONE: Professional and inviting. This is a MID-TIER lead (score ${score || '50-77'}).
+They have potential but may need nurturing. Highlight specific, relevant benefits. Use a soft call-to-action.
+Use phrases like "I thought this might be relevant to...", "Many businesses in ${industry || 'your space'} are finding...", "Happy to share more if this resonates."
+DO NOT be aggressive or assume they need your product. Be consultative.`,
+
+        Lukewarm: `TONE: Curious and low-pressure. This is an EARLY-STAGE lead (score ${score || '28-49'}).
+Focus on asking questions and offering value FIRST before pitching. Make it feel like a conversation, not a sales email.
+Use phrases like "I'm curious how you currently handle...", "I came across an insight about ${industry || 'your industry'} that...", "No pressure at all — just thought this might be useful."
+DO NOT pitch the product directly. Lead with value and curiosity.`,
+
+        Cold: `TONE: Gentle introduction with ZERO sales pressure. This is a COLD lead (score ${score || '<28'}).
+This email should share a genuinely useful insight or resource — NO product mention in the body. 
+The goal is simply to get on their radar and provide value.
+Use phrases like "Hi ${contactName || 'there'}, I came across something about ${industry || 'your field'} that...", "Thought you might find this interesting...", "No reply needed — just sharing in case it's helpful."
+DO NOT mention pricing, demos, calls, or your product features. Pure value-add only.`
+    };
+
+    const toneInstruction = toneGuides[temperature || 'Warm'];
+
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
         const prompt = `
-            You are a B2B Sales Expert. Write a personalized cold outreach email.
-            
-            Target:
-            - Business: ${businessName}
-            - Industry: ${industry || 'General'}
-            - Revenue: ${revenue ? '$' + revenue.toLocaleString() : 'Unknown'}
-            
-            Product: "LeadFlow" - An AI-powered CRM that automates pipeline and lead scoring.
-            Value Prop: Save 20h/week and increase conversion by 20%.
-            
-            Return ONLY raw JSON:
-            {
-                "subject": "string",
-                "body": "string"
-            }
+You are a senior B2B relationship builder (NOT a hard-sell salesperson). 
+Write a personalized outreach email that matches the tone guide below EXACTLY.
+
+TARGET LEAD:
+- Business: ${businessName}
+- Contact Name: ${contactName || 'Business Owner'}
+- Industry: ${industry || 'General'}
+- Annual Revenue: ${revenue ? '$' + revenue.toLocaleString() : 'Unknown'}
+- Lead Score: ${score || 'N/A'}/100
+- Temperature: ${temperature || 'Warm'}
+
+${toneInstruction}
+
+PRODUCT CONTEXT (use only if tone allows):
+"LeadFlow CRM" — AI-powered pipeline management with intelligent lead scoring.
+
+EMAIL RULES:
+1. Keep the email under 150 words
+2. Use the contact's first name if available
+3. Sound human, not robotic — no corporate jargon
+4. One clear call-to-action (or none for Cold leads)
+5. No fake urgency, no "limited time" language
+6. Professional signature: "Best, [Your Name]" 
+
+Return ONLY raw JSON:
+{
+    "subject": "string",
+    "body": "string",
+    "tone": "${temperature || 'Warm'}"
+}
         `;
 
         const result = await model.generateContent(prompt);

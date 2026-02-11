@@ -31,10 +31,10 @@ const LeadIntelligenceModal: React.FC<LeadIntelligenceModalProps> = ({ lead, ini
                     const data = await generateLeadScore(lead.businessName, lead.revenue);
                     setScoreData(data);
                 } else if (activeTab === 'strategy' && !strategyData) {
-                    const data = await generateDeepAnalysis(lead.businessName, undefined, lead.revenue);
+                    const data = await generateDeepAnalysis(lead.businessName, lead.industry, lead.revenue);
                     setStrategyData(data);
                 } else if (activeTab === 'email' && !emailData) {
-                    const data = await generateEmailDraft(lead.businessName, undefined, lead.revenue);
+                    const data = await generateEmailDraft(lead.businessName, lead.contactName, lead.industry, lead.revenue, lead.temperature, lead.score);
                     setEmailData(data);
                 }
             } catch (error) {
@@ -206,11 +206,31 @@ const LeadIntelligenceModal: React.FC<LeadIntelligenceModalProps> = ({ lead, ini
                                         </div>
                                     ) : (
                                         <>
-                                            <div className="space-y-2">
+                                            {/* Tone Badge */}
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${lead.temperature === 'Hot' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
+                                                            lead.temperature === 'Warm' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
+                                                                lead.temperature === 'Lukewarm' ? 'bg-sky-100 text-sky-700 border border-sky-200' :
+                                                                    'bg-slate-100 text-slate-500 border border-slate-200'
+                                                        }`}>
+                                                        {lead.temperature === 'Hot' ? '🔥' : lead.temperature === 'Warm' ? '🌤' : lead.temperature === 'Lukewarm' ? '☁️' : '❄️'} {lead.temperature} Tone
+                                                    </span>
+                                                    <span className="text-[11px] text-slate-400">Score: {lead.score}/100</span>
+                                                </div>
+                                            </div>
+
+                                            {/* To Field */}
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-bold text-slate-400 uppercase">To</label>
+                                                <input readOnly value={`${lead.contactName || lead.businessName} <${lead.email}>`} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 focus:outline-none" />
+                                            </div>
+
+                                            <div className="space-y-1">
                                                 <label className="text-xs font-bold text-slate-400 uppercase">Subject</label>
                                                 <input readOnly value={emailData.subject} className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-medium text-slate-800 focus:outline-none" />
                                             </div>
-                                            <div className="space-y-2 flex-1">
+                                            <div className="space-y-1 flex-1">
                                                 <label className="text-xs font-bold text-slate-400 uppercase">Message Body</label>
                                                 <textarea readOnly value={emailData.body} className="w-full h-48 bg-slate-50 border border-slate-200 rounded-lg px-3 py-3 text-sm text-slate-600 focus:outline-none resize-none font-mono leading-relaxed"></textarea>
                                             </div>
