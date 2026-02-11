@@ -19,7 +19,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <body suppressHydrationWarning className={`${inter.variable} font-sans antialiased bg-slate-50 text-slate-900`}>
+        <body suppressHydrationWarning className={`${inter.variable} font-sans antialiased`} style={{ backgroundColor: '#fdf7f0', color: '#181004' }}>
           <Providers>
             {children}
           </Providers>
