@@ -7,8 +7,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "LeadFlow V2",
-  description: "Advanced CRM & Lead Intelligence Platform",
+  title: "LeadFlow CRM",
+  description: "AI-powered CRM & Lead Intelligence Platform — Score, manage, and close leads faster.",
 };
 
 export default function RootLayout({
@@ -17,7 +17,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      afterSignOutUrl="/sign-in"
+      signInFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/dashboard"
+    >
       <html lang="en" suppressHydrationWarning>
         <body suppressHydrationWarning className={`${inter.variable} font-sans antialiased`} style={{ backgroundColor: '#fdf7f0', color: '#181004' }}>
           <Providers>
