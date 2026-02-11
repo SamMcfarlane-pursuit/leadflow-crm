@@ -449,8 +449,8 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                     <div className="flex items-center gap-4">
                         <h2 className="text-xl font-bold text-slate-800">Add Leads</h2>
                         <div className="flex bg-slate-200 rounded-lg p-1">
-                            <button onClick={() => setMode('single')} className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${mode === 'single' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Single Entry</button>
-                            <button onClick={() => setMode('smart')} className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${mode === 'smart' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}`}>Smart Import</button>
+                            <button onClick={() => setMode('single')} className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${mode === 'single' ? 'bg-white text-amber-700 shadow-sm' : 'text-slate-500'}`}>Single Entry</button>
+                            <button onClick={() => setMode('smart')} className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${mode === 'smart' ? 'bg-white text-amber-700 shadow-sm' : 'text-slate-500'}`}>Smart Import</button>
                         </div>
                     </div>
                     <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1"><X size={20} /></button>
@@ -461,7 +461,7 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                         <div className="p-6 md:p-8 max-w-xl mx-auto bg-white m-0 md:m-8 rounded-none md:rounded-xl shadow-none md:shadow-sm border-0 md:border border-slate-200 min-h-full md:min-h-0">
                             <form onSubmit={handleSingleSubmit} className="space-y-5">
                                 <div className="flex justify-end">
-                                    <button type="button" onClick={generateRandom} className="text-xs font-medium text-blue-600 hover:underline flex items-center gap-1"><Copy size={12} /> Auto-Fill</button>
+                                    <button type="button" onClick={generateRandom} className="text-xs font-medium text-amber-600 hover:underline flex items-center gap-1"><Copy size={12} /> Auto-Fill</button>
                                 </div>
                                 <div className="space-y-4">
                                     <div><label className="block text-sm font-medium text-slate-700 mb-1">Business Name</label><input type="text" required value={form.businessName} onChange={(e) => setForm({ ...form, businessName: e.target.value })} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg" placeholder="e.g. Acme Corp" /></div>
@@ -471,7 +471,7 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                         <div><label className="block text-sm font-medium text-slate-700 mb-1">Phone</label><input type="text" required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg" placeholder="(555) 123-4567" /></div>
                                     </div>
                                 </div>
-                                <div className="pt-2"><button type="submit" disabled={isProcessing} className="w-full py-3 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all">{isProcessing ? 'Processing...' : 'Add Lead'}</button></div>
+                                <div className="pt-2"><button type="submit" disabled={isProcessing} className="w-full py-3 rounded-xl font-bold text-white bg-amber-600 hover:bg-amber-700 transition-all">{isProcessing ? 'Processing...' : 'Add Lead'}</button></div>
                             </form>
                         </div>
                     ) : (
@@ -479,19 +479,19 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                         <div className="flex flex-col h-full">
                             {/* STEPS */}
                             <div className="flex items-center justify-center p-3 md:p-4 border-b border-slate-200 bg-white shadow-sm overflow-x-auto">
-                                <div className={`flex items-center gap-2 text-xs md:text-sm font-bold whitespace-nowrap ${step === 'input' ? 'text-blue-600' : (step === 'map' || step === 'review') ? 'text-emerald-500' : 'text-slate-400'}`}>
+                                <div className={`flex items-center gap-2 text-xs md:text-sm font-bold whitespace-nowrap ${step === 'input' ? 'text-amber-600' : (step === 'map' || step === 'review') ? 'text-emerald-500' : 'text-slate-400'}`}>
                                     <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-current text-white flex items-center justify-center text-[10px] md:text-xs">
                                         {(step === 'map' || step === 'review') ? <CheckCircle2 size={14} /> : '1'}
                                     </span> Import
                                 </div>
                                 <div className={`w-4 md:w-8 h-px mx-2 ${(step === 'map' || step === 'review') ? 'bg-emerald-300' : 'bg-slate-200'}`}></div>
-                                <div className={`flex items-center gap-2 text-xs md:text-sm font-bold whitespace-nowrap ${step === 'map' ? 'text-blue-600' : step === 'review' ? 'text-emerald-500' : 'text-slate-400'}`}>
+                                <div className={`flex items-center gap-2 text-xs md:text-sm font-bold whitespace-nowrap ${step === 'map' ? 'text-amber-600' : step === 'review' ? 'text-emerald-500' : 'text-slate-400'}`}>
                                     <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-current text-white flex items-center justify-center text-[10px] md:text-xs">
                                         {step === 'review' ? <CheckCircle2 size={14} /> : '2'}
                                     </span> Map
                                 </div>
                                 <div className={`w-4 md:w-8 h-px mx-2 ${step === 'review' ? 'bg-emerald-300' : 'bg-slate-200'}`}></div>
-                                <div className={`flex items-center gap-2 text-xs md:text-sm font-bold whitespace-nowrap ${step === 'review' ? 'text-blue-600' : 'text-slate-400'}`}>
+                                <div className={`flex items-center gap-2 text-xs md:text-sm font-bold whitespace-nowrap ${step === 'review' ? 'text-amber-600' : 'text-slate-400'}`}>
                                     <span className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-current text-white flex items-center justify-center text-[10px] md:text-xs">3</span> Review
                                 </div>
                             </div>
@@ -515,12 +515,12 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                         </div>
 
                                         {/* Info banner */}
-                                        <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-3 rounded-xl border border-purple-100 mb-3 flex justify-between items-center">
-                                            <p className="text-sm text-purple-800 flex items-center gap-2">
-                                                <Sparkles size={14} className="text-purple-500" />
+                                        <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-3 rounded-xl border border-amber-200 mb-3 flex justify-between items-center">
+                                            <p className="text-sm text-amber-800 flex items-center gap-2">
+                                                <Sparkles size={14} className="text-amber-500" />
                                                 Paste or drop any data — AI extracts leads automatically
                                             </p>
-                                            <button onClick={loadExampleSheet} className="text-xs font-bold text-purple-600 hover:underline whitespace-nowrap ml-3">Try Example</button>
+                                            <button onClick={loadExampleSheet} className="text-xs font-bold text-amber-600 hover:underline whitespace-nowrap ml-3">Try Example</button>
                                         </div>
 
                                         {/* Uploaded file indicator */}
@@ -535,7 +535,7 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                         {/* Drag & Drop + Paste Zone */}
                                         <div
                                             className={`flex-1 relative rounded-xl border-2 border-dashed transition-all duration-200 ${isDragging
-                                                ? 'border-blue-400 bg-blue-50/50 scale-[1.01]'
+                                                ? 'border-amber-400 bg-amber-50/50 scale-[1.01]'
                                                 : 'border-slate-200 hover:border-slate-300'
                                                 }`}
                                             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
@@ -543,17 +543,17 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                             onDrop={handleDrop}
                                         >
                                             {isDragging && (
-                                                <div className="absolute inset-0 flex items-center justify-center bg-blue-50/80 rounded-xl z-10 pointer-events-none">
+                                                <div className="absolute inset-0 flex items-center justify-center bg-amber-50/80 rounded-xl z-10 pointer-events-none">
                                                     <div className="text-center">
-                                                        <Upload size={32} className="text-blue-500 mx-auto mb-2" />
-                                                        <p className="text-blue-700 font-bold text-sm">Drop your file here</p>
+                                                        <Upload size={32} className="text-amber-500 mx-auto mb-2" />
+                                                        <p className="text-amber-700 font-bold text-sm">Drop your file here</p>
                                                     </div>
                                                 </div>
                                             )}
                                             <textarea
                                                 value={rawInput}
                                                 onChange={(e) => { setRawInput(e.target.value); setUploadedFileName(null); }}
-                                                className="w-full h-full min-h-[180px] p-4 rounded-xl font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none bg-transparent"
+                                                className="w-full h-full min-h-[180px] p-4 rounded-xl font-mono text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none resize-none bg-transparent"
                                                 placeholder={"Paste anything here:\n• Copy from Google Sheets or Excel\n• Paste email lists or contact info\n• Drop a CSV, TXT, or any text file\n• Paste raw lead data in any format\n\nAI will extract: Business Name, Email, Phone, Revenue, State, Industry, Contact Name"}
                                             />
                                         </div>
@@ -591,14 +591,14 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                                 <button
                                                     onClick={handleAIExtraction}
                                                     disabled={!rawInput.trim() || isProcessing}
-                                                    className="flex-1 sm:flex-none bg-gradient-to-r from-purple-600 to-blue-600 text-white px-5 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 transition-all shadow-lg shadow-purple-600/20 text-sm"
+                                                    className="flex-1 sm:flex-none bg-gradient-to-r from-amber-600 to-orange-600 text-white px-5 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:from-amber-700 hover:to-orange-700 disabled:opacity-50 transition-all shadow-lg shadow-amber-600/20 text-sm"
                                                 >
                                                     {isProcessing ? <><Loader2 size={16} className="animate-spin" /> Extracting...</> : <><Sparkles size={16} /> AI Extract</>}
                                                 </button>
                                                 <button
                                                     onClick={handleParse}
                                                     disabled={!rawInput.trim()}
-                                                    className="bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-700 disabled:opacity-50 text-sm"
+                                                    className="bg-amber-600 text-white px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-amber-700 disabled:opacity-50 text-sm"
                                                 >
                                                     Next <ArrowRight size={16} />
                                                 </button>
@@ -632,7 +632,7 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                                                     <select
                                                                         value={columnMapping[i] || 'ignore'}
                                                                         onChange={(e) => setColumnMapping({ ...columnMapping, [i]: e.target.value })}
-                                                                        className={`w-full p-1.5 rounded border text-xs font-bold focus:ring-2 focus:ring-blue-500 ${mapped ? 'border-blue-300 bg-blue-50/50 text-blue-800' : 'border-slate-300 text-slate-800'
+                                                                        className={`w-full p-1.5 rounded border text-xs font-bold focus:ring-2 focus:ring-amber-500 ${mapped ? 'border-amber-300 bg-amber-50/50 text-amber-800' : 'border-slate-300 text-slate-800'
                                                                             }`}
                                                                     >
                                                                         <option value="ignore">— Ignore —</option>
@@ -661,7 +661,7 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                             <button onClick={() => setStep('input')} className="flex items-center gap-1.5 text-slate-500 hover:text-slate-800 font-medium text-sm transition-colors">
                                                 <ArrowLeft size={16} /> Back
                                             </button>
-                                            <button onClick={handleMappingSubmit} className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-700 shadow-sm text-sm">
+                                            <button onClick={handleMappingSubmit} className="bg-amber-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-amber-700 shadow-sm text-sm">
                                                 Review Selection <ArrowRight size={16} />
                                             </button>
                                         </div>
@@ -677,7 +677,7 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                                     const all = new Set<number>();
                                                     parsedRows.forEach((_, i) => all.add(i));
                                                     setSelectedRows(all);
-                                                }} className="text-xs font-bold text-blue-600 hover:underline">Select All</button>
+                                                }} className="text-xs font-bold text-amber-600 hover:underline">Select All</button>
                                                 <button onClick={() => setSelectedRows(new Set())} className="text-xs font-bold text-slate-500 hover:underline">Deselect All</button>
                                             </div>
                                         </div>
@@ -713,7 +713,7 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
 
                                                         return (
                                                             <tr key={idx}
-                                                                className={`transition-colors cursor-pointer ${isSelected ? 'bg-blue-50/30 hover:bg-blue-50/50' : 'opacity-50 hover:opacity-80'}`}
+                                                                className={`transition-colors cursor-pointer ${isSelected ? 'bg-amber-50/30 hover:bg-amber-50/50' : 'opacity-50 hover:opacity-80'}`}
                                                                 onClick={() => toggleRow(idx)}
                                                             >
                                                                 <td className="px-4 py-2"><input type="checkbox" checked={isSelected} readOnly className="pointer-events-none" /></td>
@@ -734,23 +734,23 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                         <div className="mt-4 space-y-3">
                                             {/* Bulk Import Progress Bar */}
                                             {importProgress && (
-                                                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
+                                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-2">
                                                     <div className="flex items-center justify-between text-sm">
-                                                        <span className="flex items-center gap-2 text-blue-700 font-medium">
+                                                        <span className="flex items-center gap-2 text-amber-700 font-medium">
                                                             <Loader2 size={14} className="animate-spin" />
                                                             Importing leads...
                                                         </span>
-                                                        <span className="text-blue-600 font-bold">
+                                                        <span className="text-amber-600 font-bold">
                                                             {importProgress.done.toLocaleString()} / {importProgress.total.toLocaleString()}
                                                         </span>
                                                     </div>
-                                                    <div className="h-2 bg-blue-100 rounded-full overflow-hidden">
+                                                    <div className="h-2 bg-amber-100 rounded-full overflow-hidden">
                                                         <div
-                                                            className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full transition-all duration-300"
+                                                            className="h-full bg-gradient-to-r from-amber-500 to-emerald-500 rounded-full transition-all duration-300"
                                                             style={{ width: `${Math.round((importProgress.done / importProgress.total) * 100)}%` }}
                                                         />
                                                     </div>
-                                                    <p className="text-xs text-blue-500">
+                                                    <p className="text-xs text-amber-500">
                                                         {Math.round((importProgress.done / importProgress.total) * 100)}% complete — processing in batches of 500
                                                     </p>
                                                 </div>

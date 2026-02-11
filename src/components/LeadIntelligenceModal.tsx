@@ -210,9 +210,9 @@ const LeadIntelligenceModal: React.FC<LeadIntelligenceModalProps> = ({ lead, ini
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
                                                     <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${lead.temperature === 'Hot' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
-                                                            lead.temperature === 'Warm' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
-                                                                lead.temperature === 'Lukewarm' ? 'bg-sky-100 text-sky-700 border border-sky-200' :
-                                                                    'bg-slate-100 text-slate-500 border border-slate-200'
+                                                        lead.temperature === 'Warm' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
+                                                            lead.temperature === 'Lukewarm' ? 'bg-sky-100 text-sky-700 border border-sky-200' :
+                                                                'bg-slate-100 text-slate-500 border border-slate-200'
                                                         }`}>
                                                         {lead.temperature === 'Hot' ? '🔥' : lead.temperature === 'Warm' ? '🌤' : lead.temperature === 'Lukewarm' ? '☁️' : '❄️'} {lead.temperature} Tone
                                                     </span>
@@ -241,7 +241,7 @@ const LeadIntelligenceModal: React.FC<LeadIntelligenceModalProps> = ({ lead, ini
                                                 <button
                                                     onClick={handleSendEmail}
                                                     disabled={sending}
-                                                    className="flex-[2] py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+                                                    className="flex-[2] py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 bg-amber-600 text-white hover:bg-amber-700 shadow-lg shadow-amber-600/20 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
                                                 >
                                                     {sending ? 'Sending...' : <><Send size={18} /> Send Email</>}
                                                 </button>

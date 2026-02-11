@@ -87,7 +87,7 @@ export default function CampaignsView() {
     const statusColor = (s: CampaignStatus) => {
         if (s === 'Active') return 'bg-emerald-100 text-emerald-700';
         if (s === 'Draft') return 'bg-slate-100 text-slate-600';
-        return 'bg-blue-100 text-blue-700';
+        return 'bg-amber-100 text-amber-700';
     };
 
     const statusIcon = (s: CampaignStatus) => {
@@ -100,7 +100,7 @@ export default function CampaignsView() {
         <div className="flex flex-col h-screen overflow-y-auto scrollbar-hide">
             <header className="h-16 border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10 px-4 md:px-8 flex items-center justify-between flex-shrink-0">
                 <h1 className="text-xl font-bold text-slate-800">Email Campaigns</h1>
-                <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm">
+                <button className="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-amber-700 transition-colors flex items-center gap-2 shadow-sm">
                     <Mail size={16} /> New Campaign
                 </button>
             </header>
@@ -124,7 +124,7 @@ export default function CampaignsView() {
                         <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase mb-2">
                             <MousePointerClick size={14} /> Reply Rate
                         </div>
-                        <div className="text-2xl font-bold text-blue-600">{replyRate}%</div>
+                        <div className="text-2xl font-bold text-amber-600">{replyRate}%</div>
                     </div>
                     <div className="bg-white rounded-xl border border-slate-200 p-4">
                         <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase mb-2">
@@ -150,7 +150,7 @@ export default function CampaignsView() {
                                 <div key={camp.id} className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow group">
                                     <div className="flex items-center justify-between mb-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                                            <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
                                                 <Mail size={20} />
                                             </div>
                                             <div>
@@ -173,7 +173,7 @@ export default function CampaignsView() {
                                             <div className="text-[10px] text-slate-400 uppercase font-bold">Opened</div>
                                         </div>
                                         <div className="text-center p-3 bg-slate-50 rounded-lg">
-                                            <div className="text-lg font-bold text-blue-600">{camp.sent > 0 ? Math.round((camp.replied / camp.sent) * 100) : 0}%</div>
+                                            <div className="text-lg font-bold text-amber-600">{camp.sent > 0 ? Math.round((camp.replied / camp.sent) * 100) : 0}%</div>
                                             <div className="text-[10px] text-slate-400 uppercase font-bold">Replied</div>
                                         </div>
                                     </div>
@@ -182,7 +182,7 @@ export default function CampaignsView() {
                                     {camp.sent > 0 && (
                                         <div className="mt-4">
                                             <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                                <div className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full transition-all" style={{ width: `${Math.round((camp.opened / camp.sent) * 100)}%` }}></div>
+                                                <div className="h-full bg-gradient-to-r from-amber-500 to-emerald-500 rounded-full transition-all" style={{ width: `${Math.round((camp.opened / camp.sent) * 100)}%` }}></div>
                                             </div>
                                         </div>
                                     )}

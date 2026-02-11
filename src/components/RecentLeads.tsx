@@ -104,7 +104,7 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ onViewSession, onAnalyze }) =
                             placeholder="Search name, email, state..."
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-indigo-300 bg-slate-50/50 transition-all"
+                            className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-300 bg-slate-50/50 transition-all"
                         />
                     </div>
                     <select

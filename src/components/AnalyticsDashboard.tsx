@@ -50,7 +50,7 @@ const AnalyticsDashboard: React.FC<MetricsProps> = ({ leads }) => {
             value: formatCompact(totalRevenue),
             icon: <DollarSign size={20} />,
             accent: 'accent-blue',
-            iconBg: 'bg-blue-50 text-blue-600',
+            iconBg: 'bg-amber-50 text-amber-600',
         },
         {
             label: 'Average Deal',
