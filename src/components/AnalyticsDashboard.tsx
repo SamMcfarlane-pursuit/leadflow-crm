@@ -107,7 +107,7 @@ const AnalyticsDashboard: React.FC<MetricsProps> = ({ leads }) => {
                 <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm lg:col-span-2">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-xs font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wider">
-                            <BarChart3 size={14} className="text-indigo-500" />
+                            <BarChart3 size={14} className="text-amber-500" />
                             Revenue Trajectory
                         </h3>
                         <div className="flex items-center gap-4 text-[10px] text-slate-500">
@@ -115,7 +115,7 @@ const AnalyticsDashboard: React.FC<MetricsProps> = ({ leads }) => {
                                 <span className="w-2.5 h-2.5 rounded-sm bg-emerald-400" /> Per Lead
                             </span>
                             <span className="flex items-center gap-1">
-                                <span className="w-4 h-0.5 bg-indigo-500 rounded" /> Total Pipeline
+                                <span className="w-4 h-0.5 bg-amber-500 rounded" /> Total Pipeline
                             </span>
                         </div>
                     </div>

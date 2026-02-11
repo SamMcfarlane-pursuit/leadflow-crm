@@ -17,7 +17,7 @@ export default function PipelineView() {
                     <h1 className="text-lg font-bold text-slate-800">Pipeline</h1>
                     {stats && (
                         <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200/80 text-xs">
-                            <TrendingUp size={12} className="text-indigo-500" />
+                            <TrendingUp size={12} className="text-amber-500" />
                             <span className="font-semibold text-emerald-600">{stageCount('Closed')}</span>
                             <span className="text-slate-400">closed</span>
                             <span className="w-px h-3 bg-slate-200 mx-1" />

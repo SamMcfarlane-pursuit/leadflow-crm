@@ -92,13 +92,13 @@ const LeadIntelligenceModal: React.FC<LeadIntelligenceModalProps> = ({ lead, ini
 
                 {/* Tabs */}
                 <div className="flex border-b border-slate-100 shrink-0">
-                    <button onClick={() => setActiveTab('score')} className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'score' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-slate-500 hover:text-slate-700'}`}>
+                    <button onClick={() => setActiveTab('score')} className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'score' ? 'text-amber-600 border-b-2 border-amber-500 bg-amber-50/50' : 'text-slate-500 hover:text-slate-700'}`}>
                         Score
                     </button>
-                    <button onClick={() => setActiveTab('strategy')} className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'strategy' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-slate-500 hover:text-slate-700'}`}>
+                    <button onClick={() => setActiveTab('strategy')} className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'strategy' ? 'text-amber-600 border-b-2 border-amber-500 bg-amber-50/50' : 'text-slate-500 hover:text-slate-700'}`}>
                         Strategy & Competitors
                     </button>
-                    <button onClick={() => setActiveTab('email')} className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'email' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-slate-500 hover:text-slate-700'}`}>
+                    <button onClick={() => setActiveTab('email')} className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'email' ? 'text-amber-600 border-b-2 border-amber-500 bg-amber-50/50' : 'text-slate-500 hover:text-slate-700'}`}>
                         Draft Email
                     </button>
                 </div>
@@ -107,7 +107,7 @@ const LeadIntelligenceModal: React.FC<LeadIntelligenceModalProps> = ({ lead, ini
                 <div className="p-6 overflow-y-auto min-h-[400px]">
                     {loading ? (
                         <div className="h-full flex flex-col items-center justify-center py-20 gap-4">
-                            <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+                            <div className="w-12 h-12 border-4 border-amber-100 border-t-amber-500 rounded-full animate-spin"></div>
                             <p className="text-slate-400 animate-pulse text-sm">Gemini is analyzing {activeTab}...</p>
                         </div>
                     ) : (
@@ -133,7 +133,7 @@ const LeadIntelligenceModal: React.FC<LeadIntelligenceModalProps> = ({ lead, ini
                                         <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">AI Reasoning</h4>
                                         {scoreData.reasoning?.map((r, i) => (
                                             <div key={i} className="flex gap-3 items-start p-3 bg-slate-50 rounded-lg border border-slate-100">
-                                                <Check size={16} className="text-indigo-500 mt-0.5 shrink-0" />
+                                                <Check size={16} className="text-amber-500 mt-0.5 shrink-0" />
                                                 <span className="text-sm text-slate-700">{r}</span>
                                             </div>
                                         ))}
@@ -168,7 +168,7 @@ const LeadIntelligenceModal: React.FC<LeadIntelligenceModalProps> = ({ lead, ini
                                         </h4>
                                         <div className="flex flex-wrap gap-2">
                                             {strategyData.trends.map((trend, i) => (
-                                                <span key={i} className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-medium border border-indigo-100">
+                                                <span key={i} className="px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-medium border border-amber-100">
                                                     {trend}
                                                 </span>
                                             ))}

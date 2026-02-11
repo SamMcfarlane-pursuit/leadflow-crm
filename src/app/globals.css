@@ -2,9 +2,37 @@
 
 @theme {
   --font-sans: var(--font-inter);
-  --color-slate-850: #151f32;
-  --color-slate-900: #0f172a;
-  --color-slate-950: #020617;
+
+  /* ─── LeadFlow CRM Palette (Realtime Colors) ───────────────── */
+  --color-brand-text: #181004;
+  --color-brand-bg: #fdf7f0;
+  --color-brand-primary: #e09f36;
+  --color-brand-secondary: #80eba2;
+  --color-brand-accent: #57e5d8;
+
+  /* ─── Primary (Gold) Scale ──────────────────────────────────── */
+  --color-primary-50: #fdf6e8;
+  --color-primary-100: #fbe9c5;
+  --color-primary-200: #f6d58f;
+  --color-primary-300: #f0bf5a;
+  --color-primary-400: #e09f36;
+  --color-primary-500: #c8891e;
+  --color-primary-600: #a06d16;
+  --color-primary-700: #7a5311;
+  --color-primary-800: #543a0d;
+  --color-primary-900: #2e2008;
+
+  /* ─── Dark Surface Scale (for sidebar/headers) ─────────────── */
+  --color-surface-900: #1a1108;
+  --color-surface-850: #221810;
+  --color-surface-800: #2a1e14;
+  --color-surface-700: #3d2e1e;
+  --color-surface-600: #5a4631;
+
+  /* ─── Legacy Overrides ─────────────────────────────────────── */
+  --color-slate-850: #221810;
+  --color-slate-900: #1a1108;
+  --color-slate-950: #0f0a04;
 }
 
 /* ─── Scrollbar Hide ──────────────────────────────────────────── */
@@ -20,8 +48,8 @@
 /* ─── Base ────────────────────────────────────────────────────── */
 @layer base {
   body {
-    background-color: #f8fafc;
-    color: var(--color-slate-900);
+    background-color: #fdf7f0;
+    color: #181004;
   }
 }
 
@@ -63,11 +91,11 @@
 
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+    box-shadow: 0 0 0 0 rgba(224, 159, 54, 0.4);
   }
 
   50% {
-    box-shadow: 0 0 0 6px rgba(99, 102, 241, 0);
+    box-shadow: 0 0 0 6px rgba(224, 159, 54, 0);
   }
 }
 
@@ -87,7 +115,7 @@
 }
 
 .shimmer {
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background: linear-gradient(90deg, #f5ede4 25%, #ebe0d2 50%, #f5ede4 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
@@ -98,19 +126,19 @@
 }
 
 .card-glow:hover {
-  box-shadow: 0 8px 30px -8px rgba(99, 102, 241, 0.12), 0 4px 10px -4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 30px -8px rgba(224, 159, 54, 0.15), 0 4px 10px -4px rgba(0, 0, 0, 0.06);
   transform: translateY(-1px);
 }
 
 /* ─── Gradient Accent Borders ────────────────────────────────── */
-.accent-blue {
+.accent-gold {
   border-top: 3px solid transparent;
-  border-image: linear-gradient(135deg, #3b82f6, #6366f1) 1;
+  border-image: linear-gradient(135deg, #e09f36, #c8891e) 1;
 }
 
-.accent-emerald {
+.accent-mint {
   border-top: 3px solid transparent;
-  border-image: linear-gradient(135deg, #10b981, #06b6d4) 1;
+  border-image: linear-gradient(135deg, #80eba2, #57e5d8) 1;
 }
 
 .accent-rose {
@@ -118,9 +146,9 @@
   border-image: linear-gradient(135deg, #f43f5e, #f97316) 1;
 }
 
-.accent-violet {
+.accent-teal {
   border-top: 3px solid transparent;
-  border-image: linear-gradient(135deg, #8b5cf6, #ec4899) 1;
+  border-image: linear-gradient(135deg, #57e5d8, #80eba2) 1;
 }
 
 /* ─── Stat Number Animation ──────────────────────────────────── */

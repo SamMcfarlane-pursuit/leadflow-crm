@@ -21,13 +21,16 @@ export const MobileNav = () => {
 const MobileNavItem = ({ href, icon, label, active }: { href: string, icon: React.ReactNode, label: string, active: boolean }) => (
     <Link
         href={href}
-        className={`relative flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-200 ${active
-            ? 'text-indigo-600 bg-indigo-50'
-            : 'text-slate-400 hover:text-slate-600 active:scale-95'
-            }`}
+        className={`relative flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-200`}
+        style={active ? {
+            color: '#c8891e',
+            backgroundColor: 'rgba(224,159,54,0.08)'
+        } : {
+            color: '#8a7a6a'
+        }}
     >
         {active && (
-            <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-5 h-1 bg-indigo-500 rounded-full shadow-sm shadow-indigo-500/30" />
+            <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-5 h-1 rounded-full" style={{ backgroundColor: '#e09f36', boxShadow: '0 1px 4px rgba(224,159,54,0.3)' }} />
         )}
         <span className={`transition-transform duration-150 ${active ? 'scale-110' : ''}`}>
             {icon}

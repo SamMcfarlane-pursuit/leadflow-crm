@@ -44,7 +44,7 @@ export default function DashboardView() {
             )}
 
             {/* HEADER */}
-            <header className="h-16 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-10 px-4 md:px-8 flex items-center justify-between">
+            <header className="h-16 backdrop-blur-xl border-b sticky top-0 z-10 px-4 md:px-8 flex items-center justify-between" style={{ backgroundColor: 'rgba(253,247,240,0.7)', borderColor: 'rgba(224,159,54,0.15)' }}>
                 <div className="hidden md:block">
                     <h1 className="text-lg font-bold text-slate-800">{greeting}</h1>
                     <p className="text-xs text-slate-400 -mt-0.5">Here&apos;s your lead pipeline overview</p>
@@ -59,7 +59,7 @@ export default function DashboardView() {
                     {/* Quick Stats Pill */}
                     {stats && (
                         <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200/80 text-xs">
-                            <Sparkles size={12} className="text-indigo-500" />
+                            <Sparkles size={12} style={{ color: '#e09f36' }} />
                             <span className="font-semibold text-slate-700">{stats.total}</span>
                             <span className="text-slate-400">leads</span>
                             <span className="w-px h-3 bg-slate-200 mx-1" />
@@ -70,7 +70,8 @@ export default function DashboardView() {
 
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-4 py-2 rounded-xl font-semibold flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/20 text-sm"
+                        className="text-white px-4 py-2 rounded-xl font-semibold flex items-center gap-2 transition-all text-sm"
+                        style={{ background: 'linear-gradient(to right, #e09f36, #c8891e)', boxShadow: '0 4px 14px rgba(224,159,54,0.25)' }}
                     >
                         <Plus size={16} strokeWidth={2.5} />
                         <span className="hidden sm:inline">Add Lead</span>

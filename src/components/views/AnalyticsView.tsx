@@ -13,7 +13,7 @@ export default function AnalyticsView() {
             <header className="h-16 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-10 px-4 md:px-8 flex items-center justify-between flex-shrink-0">
                 <div className="flex items-center gap-3">
                     <h1 className="text-lg font-bold text-slate-800">Analytics</h1>
-                    <span className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-xs font-semibold text-indigo-600">
+                    <span className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-100 text-xs font-semibold text-amber-600">
                         <BarChart3 size={12} /> Live Data
                     </span>
                 </div>

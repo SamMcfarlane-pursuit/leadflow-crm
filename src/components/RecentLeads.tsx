@@ -84,13 +84,13 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ onViewSession, onAnalyze }) =
                 <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                         <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Recent Leads</h3>
-                        <span className="text-[11px] font-semibold px-2.5 py-1 bg-indigo-50 rounded-full text-indigo-600 border border-indigo-100">
+                        <span className="text-[11px] font-semibold px-2.5 py-1 bg-amber-50 rounded-full text-amber-600 border border-amber-100">
                             {totalLeads.toLocaleString()}
                         </span>
                     </div>
                     <button
                         onClick={handleExport}
-                        className="text-xs font-semibold text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+                        className="text-xs font-semibold text-slate-500 hover:text-amber-600 hover:bg-amber-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
                     >
                         <Download size={12} /> Export CSV
                     </button>
@@ -104,13 +104,13 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ onViewSession, onAnalyze }) =
                             placeholder="Search name, email, state..."
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-300 bg-slate-50/50 transition-all"
+                            className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-indigo-300 bg-slate-50/50 transition-all"
                         />
                     </div>
                     <select
                         value={tempFilter}
                         onChange={(e) => setTempFilter(e.target.value as TempFilter)}
-                        className="px-3 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 cursor-pointer"
+                        className="px-3 py-2 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/30 cursor-pointer"
                     >
                         <option value="All">All Temps</option>
                         <option value="Hot">🔥 Hot</option>
@@ -121,7 +121,7 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ onViewSession, onAnalyze }) =
                     <select
                         value={scoreFilter}
                         onChange={(e) => setScoreFilter(e.target.value)}
-                        className={`px-3 py-2 rounded-xl text-sm font-semibold border transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/30 ${scoreFilter !== 'All'
+                        className={`px-3 py-2 rounded-xl text-sm font-semibold border transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500/30 ${scoreFilter !== 'All'
                             ? scoreFilter === '78' ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
                                 : scoreFilter === '50' ? 'bg-amber-50 border-amber-200 text-amber-700'
                                     : scoreFilter === '28' ? 'bg-sky-50 border-sky-200 text-sky-700'
@@ -141,7 +141,7 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ onViewSession, onAnalyze }) =
             {/* Loading */}
             {isLoading && (
                 <div className="flex items-center justify-center py-12">
-                    <Loader2 size={24} className="animate-spin text-indigo-500" />
+                    <Loader2 size={24} className="animate-spin text-amber-500" />
                     <span className="ml-3 text-sm text-slate-500 font-medium">Loading leads...</span>
                 </div>
             )}
@@ -165,7 +165,7 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ onViewSession, onAnalyze }) =
                             </thead>
                             <tbody className="divide-y divide-slate-50">
                                 {leads.map((lead: Lead) => (
-                                    <tr key={lead.id} className="hover:bg-indigo-50/30 transition-colors group">
+                                    <tr key={lead.id} className="hover:bg-amber-50/30 transition-colors group">
                                         {/* Business */}
                                         <td className="px-3 py-2.5">
                                             <div className="font-semibold text-slate-800 text-xs truncate">{lead.businessName}</div>
@@ -254,7 +254,7 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ onViewSession, onAnalyze }) =
                                             <div className="flex items-center justify-end gap-1">
                                                 <button
                                                     onClick={() => onAnalyze(lead, 'strategy')}
-                                                    className="inline-flex items-center gap-1 px-2 py-1.5 text-[10px] font-semibold rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition-all"
+                                                    className="inline-flex items-center gap-1 px-2 py-1.5 text-[10px] font-semibold rounded-md bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-all"
                                                     title="AI Strategy">
                                                     <Target size={10} /> Strategy
                                                 </button>
@@ -329,7 +329,7 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ onViewSession, onAnalyze }) =
                                     </div>
                                 </div>
                                 <div className="flex gap-2 border-t border-slate-200/60 pt-3">
-                                    <button onClick={() => onAnalyze(lead, 'strategy')} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-indigo-50 border border-indigo-200 rounded-xl text-sm text-indigo-700 font-semibold active:scale-95 transition-transform">
+                                    <button onClick={() => onAnalyze(lead, 'strategy')} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700 font-semibold active:scale-95 transition-transform">
                                         <Target size={13} /> Strategy
                                     </button>
                                     <button onClick={() => onAnalyze(lead, 'email')} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-purple-50 border border-purple-200 rounded-xl text-sm text-purple-700 font-semibold active:scale-95 transition-transform">
@@ -368,7 +368,7 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ onViewSession, onAnalyze }) =
                                             key={pageNum}
                                             onClick={() => goToPage(pageNum)}
                                             className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${pageNum === page
-                                                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-200'
+                                                ? 'bg-amber-500 text-white shadow-sm shadow-amber-200'
                                                 : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
                                                 }`}
                                         >
