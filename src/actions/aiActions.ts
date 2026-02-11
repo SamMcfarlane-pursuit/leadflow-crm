@@ -68,6 +68,7 @@ export type ExtractedLead = {
     state: string;
     industry: string;
     contactName: string;
+    quality?: 'complete' | 'partial' | 'minimal';
 };
 
 export async function extractLeadsFromText(rawText: string): Promise<ExtractedLead[] | null> {
@@ -101,6 +102,11 @@ export async function extractLeadsFromText(rawText: string): Promise<ExtractedLe
       • Strip all $, commas, spaces before converting
       • Default to 0 if truly unknown
 
+      DATA QUALITY — for each lead, assess quality:
+      • "complete" = has businessName + email + phone + revenue > 0
+      • "partial" = has businessName + at least one of (email, phone) 
+      • "minimal" = only businessName or very sparse data
+
       Extract these fields for EACH lead/row found:
       - businessName (string): Company or DBA name
       - email (string): email address, or "unknown" if not found
@@ -109,15 +115,16 @@ export async function extractLeadsFromText(rawText: string): Promise<ExtractedLe
       - state (string): US State code (NY, CA, FL). Infer from area code or address if not explicit. "Unknown" if can't determine.
       - industry (string): business type/industry. "Unknown" if not found.
       - contactName (string): owner or contact person name. "Unknown" if not found.
+      - quality (string): "complete", "partial", or "minimal"
 
       RAW TEXT TO PARSE:
       """
-      ${rawText.slice(0, 30000)} 
+      ${rawText.slice(0, 50000)} 
       """
 
       Return ONLY raw JSON array. No markdown, no explanation.
       [
-        { "businessName": "...", "email": "...", "phone": "...", "revenue": 180000, "state": "NY", "industry": "Restaurant", "contactName": "John Smith" }
+        { "businessName": "...", "email": "...", "phone": "...", "revenue": 180000, "state": "NY", "industry": "Restaurant", "contactName": "John Smith", "quality": "complete" }
       ]
     `;
 
@@ -131,6 +138,93 @@ export async function extractLeadsFromText(rawText: string): Promise<ExtractedLe
         return null;
     }
 }
+
+/* ─── Smart Import: Unified Processing ─────────────────────────────── */
+
+type ContentType = 'structured' | 'unstructured';
+
+function detectContentType(text: string): ContentType {
+    const lines = text.trim().split('\n');
+    if (lines.length < 2) return 'unstructured';
+
+    const firstLine = lines[0];
+
+    // Check for tab-delimited or comma-delimited with consistent column counts
+    const delim = firstLine.includes('\t') ? '\t' : ',';
+    const headerCols = firstLine.split(delim).length;
+
+    // If header has 3+ columns and at least 60% of rows match that column count → structured
+    if (headerCols >= 3) {
+        const sampleRows = lines.slice(1, Math.min(lines.length, 10));
+        const matchingRows = sampleRows.filter(r => {
+            const cols = r.split(delim).length;
+            return Math.abs(cols - headerCols) <= 1; // allow ±1 column tolerance
+        });
+        if (matchingRows.length / sampleRows.length >= 0.6) return 'structured';
+    }
+
+    return 'unstructured';
+}
+
+export type SmartImportResult = {
+    leads: ExtractedLead[];
+    method: 'ai' | 'csv';
+    totalFound: number;
+    warnings: string[];
+};
+
+export async function processSmartImport(rawText: string): Promise<SmartImportResult> {
+    const contentType = detectContentType(rawText);
+    const warnings: string[] = [];
+
+    if (contentType === 'unstructured') {
+        // Route to AI extraction for emails, notes, mixed text
+        const leads = await extractLeadsFromText(rawText);
+        if (!leads || leads.length === 0) {
+            return { leads: [], method: 'ai', totalFound: 0, warnings: ['AI could not find any lead data in the text. Try pasting data with names, emails, or phone numbers.'] };
+        }
+
+        // Post-process: assign quality if AI didn't
+        const qualityLeads = leads.map(l => ({
+            ...l,
+            quality: l.quality || assessQuality(l),
+        }));
+
+        const lowQuality = qualityLeads.filter(l => l.quality === 'minimal').length;
+        if (lowQuality > 0) warnings.push(`${lowQuality} leads have minimal data (missing most fields).`);
+
+        return { leads: qualityLeads, method: 'ai', totalFound: qualityLeads.length, warnings };
+    }
+
+    // Structured data — try AI extraction for better intelligence
+    // AI can understand context, normalize revenue, infer states from area codes
+    const leads = await extractLeadsFromText(rawText);
+    if (leads && leads.length > 0) {
+        const qualityLeads = leads.map(l => ({
+            ...l,
+            quality: l.quality || assessQuality(l),
+        }));
+        const lowQuality = qualityLeads.filter(l => l.quality === 'minimal').length;
+        if (lowQuality > 0) warnings.push(`${lowQuality} leads have minimal data.`);
+
+        return { leads: qualityLeads, method: 'ai', totalFound: qualityLeads.length, warnings };
+    }
+
+    // AI failed — return empty with a message (client will fall back to CSV parse)
+    return { leads: [], method: 'csv', totalFound: 0, warnings: ['AI extraction unavailable. File was parsed using column mapping.'] };
+}
+
+function assessQuality(lead: ExtractedLead): 'complete' | 'partial' | 'minimal' {
+    const hasName = lead.businessName && lead.businessName !== 'Unknown' && lead.businessName !== 'unknown';
+    const hasEmail = lead.email && lead.email !== 'unknown' && lead.email !== 'no-email@provided.com';
+    const hasPhone = lead.phone && lead.phone !== 'unknown' && lead.phone !== '555-000-0000';
+    const hasRevenue = lead.revenue > 0;
+
+    if (hasName && hasEmail && hasPhone && hasRevenue) return 'complete';
+    if (hasName && (hasEmail || hasPhone)) return 'partial';
+    return 'minimal';
+}
+
 export type DeepAnalysisResult = {
     competitors: { name: string; strength: string; weakness: string }[];
     trends: string[];

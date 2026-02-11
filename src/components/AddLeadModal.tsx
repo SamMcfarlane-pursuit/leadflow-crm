@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Building, Mail, Phone, BadgeDollarSign, Info, X, FileJson, Copy, Upload, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Trash2, Loader2, FileText, Sparkles, FileSpreadsheet } from 'lucide-react';
+import { Building, Mail, Phone, BadgeDollarSign, Info, X, FileJson, Copy, Upload, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Trash2, Loader2, FileText, Sparkles, FileSpreadsheet, Filter, Shield, ShieldAlert, ShieldCheck, SlidersHorizontal } from 'lucide-react';
 import { processLeadSimulation, processBatch, calculateTier, COMPLIANCE_CONFIG } from '../utils/ironGateLogic';
 import { Lead, LogEntry } from '../types';
-import { generateLeadScore, extractLeadsFromText } from '@/actions/aiActions';
+import { generateLeadScore, processSmartImport } from '@/actions/aiActions';
+import type { ExtractedLead, SmartImportResult } from '@/actions/aiActions';
 import { useLeads } from '@/context/LeadContext';
 import * as XLSX from 'xlsx';
 
@@ -101,6 +102,17 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ onLeadProcessed, addLog, on
     const [columnMapping, setColumnMapping] = useState<Record<number, string>>({});
     const [columnConfidences, setColumnConfidences] = useState<Record<number, number>>({});
     const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+    const [processingMethod, setProcessingMethod] = useState<'ai' | 'csv' | null>(null);
+    const [importWarnings, setImportWarnings] = useState<string[]>([]);
+    const [aiLeads, setAiLeads] = useState<ExtractedLead[]>([]);
+
+    // FILTER STATE
+    const [filterMinRevenue, setFilterMinRevenue] = useState('');
+    const [filterMaxRevenue, setFilterMaxRevenue] = useState('');
+    const [filterState, setFilterState] = useState('');
+    const [filterHideMissingEmail, setFilterHideMissingEmail] = useState(false);
+    const [filterQuality, setFilterQuality] = useState<'all' | 'complete' | 'partial'>('all');
+    const [showFilters, setShowFilters] = useState(false);
 
     // Single Form State
     const [form, setForm] = useState({
@@ -250,20 +262,25 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ onLeadProcessed, addLog, on
         setStep('map');
     };
 
-    const handleAIExtraction = async () => {
+    const handleProcessData = async () => {
         if (!rawInput.trim()) return;
         setIsProcessing(true);
         setErrorMsg(null);
+        setImportWarnings([]);
         try {
-            console.log("Starting AI Extraction...");
-            const extracted = await extractLeadsFromText(rawInput);
+            console.log("Starting Smart Import processing...");
+            const result: SmartImportResult = await processSmartImport(rawInput);
 
-            if (extracted && extracted.length > 0) {
-                console.log("AI Extraction Success:", extracted);
+            setProcessingMethod(result.method);
+            setImportWarnings(result.warnings);
 
-                // Convert extracted objects to rows for the wizard
+            if (result.leads.length > 0) {
+                console.log(`Smart Import: ${result.method} extracted ${result.leads.length} leads`);
+                setAiLeads(result.leads);
+
+                // Convert to rows for the wizard
                 const newHeaders = ["Business Name", "Email", "Phone", "Revenue", "State", "Industry", "Contact"];
-                const newRows = extracted.map(lead => [
+                const newRows = result.leads.map(lead => [
                     lead.businessName,
                     lead.email,
                     lead.phone,
@@ -282,21 +299,43 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ onLeadProcessed, addLog, on
                 };
                 setColumnMapping(newMapping);
                 setColumnConfidences({ 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 100, 6: 100 });
-                setStep('map');
+
+                // Select all rows by default
+                const allIndices = new Set<number>();
+                newRows.forEach((_, idx) => allIndices.add(idx));
+                setSelectedRows(allIndices);
+
+                // Skip mapping step — go directly to review
+                setStep('review');
 
                 addLog({
                     id: Math.random().toString(36).substr(2, 9),
                     timestamp: new Date(),
                     level: 'SUCCESS',
-                    message: `AI extracted ${extracted.length} leads from text.`,
+                    message: `AI extracted ${result.leads.length} leads (${result.method} mode).`,
                     module: 'API'
                 });
+            } else if (result.method === 'csv') {
+                // AI unavailable, fall back to CSV parse
+                handleParse();
             } else {
-                setErrorMsg("AI couldn't find lead data. Try pasting more contact info (names, emails, phones).");
+                setErrorMsg(result.warnings[0] || "Couldn't find lead data. Try pasting more contact info.");
             }
         } catch (error) {
-            console.error("Extraction error", error);
-            setErrorMsg("AI extraction failed. Please try again or use manual CSV paste.");
+            console.error("Processing error", error);
+            // Fallback to CSV parse on error
+            try {
+                handleParse();
+                addLog({
+                    id: Math.random().toString(36).substr(2, 9),
+                    timestamp: new Date(),
+                    level: 'WARN',
+                    message: 'AI unavailable — used CSV column mapping instead.',
+                    module: 'CORE'
+                });
+            } catch {
+                setErrorMsg("Processing failed. Check your data format and try again.");
+            }
         } finally {
             setIsProcessing(false);
         }
@@ -409,10 +448,55 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
 
     const handleFileUpload = (file: File) => {
         setUploadedFileName(file.name);
+        setErrorMsg(null);
         const ext = file.name.split('.').pop()?.toLowerCase() || '';
 
+        const processAfterLoad = (text: string) => {
+            setRawInput(text);
+            // Auto-trigger processing after file load
+            setTimeout(() => {
+                setIsProcessing(true);
+                processSmartImport(text).then(result => {
+                    setProcessingMethod(result.method);
+                    setImportWarnings(result.warnings);
+                    setAiLeads(result.leads);
+
+                    if (result.leads.length > 0) {
+                        const newHeaders = ["Business Name", "Email", "Phone", "Revenue", "State", "Industry", "Contact"];
+                        const newRows = result.leads.map(lead => [
+                            lead.businessName, lead.email, lead.phone,
+                            lead.revenue.toString(), lead.state,
+                            lead.industry || '', lead.contactName || ''
+                        ]);
+                        setHeaders(newHeaders);
+                        setParsedRows(newRows);
+                        setColumnMapping({ 0: 'businessName', 1: 'email', 2: 'phone', 3: 'revenue', 4: 'state', 5: 'industry', 6: 'contactName' });
+                        setColumnConfidences({ 0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 100, 6: 100 });
+                        const allIndices = new Set<number>();
+                        newRows.forEach((_, idx) => allIndices.add(idx));
+                        setSelectedRows(allIndices);
+                        setStep('review');
+                        addLog({ id: Math.random().toString(36).substr(2, 9), timestamp: new Date(), level: 'SUCCESS', message: `Auto-processed ${result.leads.length} leads from ${file.name}`, module: 'API' });
+                    } else {
+                        // Fall back to CSV parse
+                        const delim = text.split('\n')[0]?.includes('\t') ? '\t' : ',';
+                        const allRows = text.trim().split('\n').map(line => parseCSVLine(line, delim));
+                        if (allRows.length > 1) {
+                            setHeaders(allRows[0]);
+                            setParsedRows(allRows.slice(1).filter(r => r.some(c => c.length > 0)));
+                            const { mapping, confidences } = autoMapColumns(allRows[0]);
+                            setColumnMapping(mapping);
+                            setColumnConfidences(confidences);
+                            setStep('map');
+                        }
+                    }
+                }).catch(() => {
+                    // Silent fallback to manual
+                }).finally(() => setIsProcessing(false));
+            }, 100);
+        };
+
         if (['xlsx', 'xls'].includes(ext)) {
-            // Excel binary → parse with SheetJS, convert to TSV
             const reader = new FileReader();
             reader.onload = (event) => {
                 const data = event.target?.result;
@@ -420,15 +504,14 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                 const tsv = XLSX.utils.sheet_to_csv(firstSheet, { FS: '\t' });
-                setRawInput(tsv);
+                processAfterLoad(tsv);
             };
             reader.readAsArrayBuffer(file);
         } else {
-            // CSV, TSV, TXT, JSON — read as text
             const reader = new FileReader();
             reader.onload = (event) => {
                 const text = event.target?.result;
-                if (typeof text === 'string') setRawInput(text);
+                if (typeof text === 'string') processAfterLoad(text);
             };
             reader.readAsText(file);
         }
@@ -587,22 +670,13 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                                 <Upload size={16} /> Upload File
                                             </button>
 
-                                            <div className="flex gap-2">
-                                                <button
-                                                    onClick={handleAIExtraction}
-                                                    disabled={!rawInput.trim() || isProcessing}
-                                                    className="flex-1 sm:flex-none bg-gradient-to-r from-amber-600 to-orange-600 text-white px-5 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:from-amber-700 hover:to-orange-700 disabled:opacity-50 transition-all shadow-lg shadow-amber-600/20 text-sm"
-                                                >
-                                                    {isProcessing ? <><Loader2 size={16} className="animate-spin" /> Extracting...</> : <><Sparkles size={16} /> AI Extract</>}
-                                                </button>
-                                                <button
-                                                    onClick={handleParse}
-                                                    disabled={!rawInput.trim()}
-                                                    className="bg-amber-600 text-white px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:bg-amber-700 disabled:opacity-50 text-sm"
-                                                >
-                                                    Next <ArrowRight size={16} />
-                                                </button>
-                                            </div>
+                                            <button
+                                                onClick={handleProcessData}
+                                                disabled={!rawInput.trim() || isProcessing}
+                                                className="flex-1 sm:flex-none bg-gradient-to-r from-amber-600 to-orange-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:from-amber-700 hover:to-orange-700 disabled:opacity-50 transition-all shadow-lg shadow-amber-600/20 text-sm"
+                                            >
+                                                {isProcessing ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : <><Sparkles size={16} /> Process Data</>}
+                                            </button>
                                         </div>
                                     </div>
                                 )}
@@ -670,66 +744,191 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
 
                                 {step === 'review' && (
                                     <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full overflow-hidden">
-                                        <div className="flex justify-between items-center mb-4">
-                                            <h3 className="font-bold text-slate-800">Select Rows to Import ({selectedRows.size})</h3>
-                                            <div className="flex gap-2">
+                                        {/* Header + Method badge */}
+                                        <div className="flex justify-between items-center mb-2">
+                                            <div className="flex items-center gap-3">
+                                                <h3 className="font-bold text-slate-800">Review Leads</h3>
+                                                {processingMethod && (
+                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${processingMethod === 'ai' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+                                                        {processingMethod === 'ai' ? '✨ AI Extracted' : '📄 CSV Parsed'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => setShowFilters(!showFilters)}
+                                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${showFilters ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-white border border-slate-200 text-slate-500 hover:text-slate-700'}`}
+                                                >
+                                                    <SlidersHorizontal size={13} /> Filters
+                                                </button>
                                                 <button onClick={() => {
                                                     const all = new Set<number>();
                                                     parsedRows.forEach((_, i) => all.add(i));
                                                     setSelectedRows(all);
                                                 }} className="text-xs font-bold text-amber-600 hover:underline">Select All</button>
-                                                <button onClick={() => setSelectedRows(new Set())} className="text-xs font-bold text-slate-500 hover:underline">Deselect All</button>
+                                                <button onClick={() => setSelectedRows(new Set())} className="text-xs font-bold text-slate-500 hover:underline">Clear</button>
                                             </div>
                                         </div>
 
-                                        <div className="flex-1 overflow-y-auto border border-slate-200 rounded-xl bg-white">
-                                            <table className="w-full text-sm text-left">
-                                                <thead className="bg-slate-50 sticky top-0 z-10 text-slate-600 font-medium shadow-sm">
-                                                    <tr>
-                                                        <th className="w-10 px-4 py-3"><input type="checkbox" checked={selectedRows.size === parsedRows.length} readOnly /></th>
-                                                        <th className="px-4 py-3">Business</th>
-                                                        <th className="px-4 py-3">Contact</th>
-                                                        <th className="px-4 py-3">Email</th>
-                                                        <th className="px-4 py-3">Revenue</th>
-                                                        <th className="px-4 py-3">Phone</th>
-                                                        <th className="px-4 py-3">Industry</th>
-                                                        <th className="px-4 py-3">State</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-slate-100">
-                                                    {parsedRows.map((row, idx) => {
-                                                        const isSelected = selectedRows.has(idx);
-                                                        let name = "", email = "", rev = "", phone = "", st = "", ind = "", contact = "";
-                                                        Object.entries(columnMapping).forEach(([c, f]) => {
-                                                            const val = row[parseInt(c)] || '';
-                                                            if (f === 'businessName') name = val;
-                                                            if (f === 'email') email = val;
-                                                            if (f === 'revenue') rev = val;
-                                                            if (f === 'phone') phone = val;
-                                                            if (f === 'state') st = val;
-                                                            if (f === 'industry') ind = val;
-                                                            if (f === 'contactName') contact = val;
-                                                        });
+                                        {/* Warnings */}
+                                        {importWarnings.length > 0 && (
+                                            <div className="mb-2 flex flex-wrap gap-2">
+                                                {importWarnings.map((w, i) => (
+                                                    <span key={i} className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
+                                                        <AlertCircle size={12} /> {w}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
 
-                                                        return (
-                                                            <tr key={idx}
-                                                                className={`transition-colors cursor-pointer ${isSelected ? 'bg-amber-50/30 hover:bg-amber-50/50' : 'opacity-50 hover:opacity-80'}`}
-                                                                onClick={() => toggleRow(idx)}
-                                                            >
-                                                                <td className="px-4 py-2"><input type="checkbox" checked={isSelected} readOnly className="pointer-events-none" /></td>
-                                                                <td className="px-4 py-2 font-medium text-slate-900">{name || <span className="text-red-400 italic">Missing</span>}</td>
-                                                                <td className="px-4 py-2 text-slate-600 text-xs">{contact || <span className="text-slate-300">—</span>}</td>
-                                                                <td className="px-4 py-2 text-slate-600 text-xs">{email}</td>
-                                                                <td className="px-4 py-2 text-slate-600 font-mono text-xs">{rev}</td>
-                                                                <td className="px-4 py-2 text-slate-600 text-xs">{phone}</td>
-                                                                <td className="px-4 py-2 text-slate-600 text-xs">{ind || <span className="text-slate-300">—</span>}</td>
-                                                                <td className="px-4 py-2 text-slate-600 text-xs">{st}</td>
-                                                            </tr>
-                                                        );
-                                                    })}
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                        {/* Filters Panel */}
+                                        {showFilters && (
+                                            <div className="mb-3 p-3 bg-white border border-slate-200 rounded-xl space-y-3">
+                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Min Revenue</label>
+                                                        <input
+                                                            type="text" value={filterMinRevenue}
+                                                            onChange={e => setFilterMinRevenue(e.target.value)}
+                                                            placeholder="e.g. 50000"
+                                                            className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Max Revenue</label>
+                                                        <input
+                                                            type="text" value={filterMaxRevenue}
+                                                            onChange={e => setFilterMaxRevenue(e.target.value)}
+                                                            placeholder="e.g. 1000000"
+                                                            className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">State</label>
+                                                        <input
+                                                            type="text" value={filterState}
+                                                            onChange={e => setFilterState(e.target.value)}
+                                                            placeholder="e.g. NY, CA"
+                                                            className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Quality</label>
+                                                        <select
+                                                            value={filterQuality}
+                                                            onChange={e => setFilterQuality(e.target.value as any)}
+                                                            className="w-full px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                                                        >
+                                                            <option value="all">All Quality</option>
+                                                            <option value="complete">Complete Only</option>
+                                                            <option value="partial">Partial+</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                                                        <input type="checkbox" checked={filterHideMissingEmail} onChange={e => setFilterHideMissingEmail(e.target.checked)} className="rounded border-slate-300" />
+                                                        Hide leads missing email
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Showing count */}
+                                        {(() => {
+                                            const minRev = parseFloat(filterMinRevenue) || 0;
+                                            const maxRev = parseFloat(filterMaxRevenue) || Infinity;
+                                            const stateFilter = filterState.trim().toUpperCase().split(',').map(s => s.trim()).filter(Boolean);
+
+                                            const filteredIndices = parsedRows.map((row, idx) => {
+                                                let rev = 0;
+                                                let email = '';
+                                                let st = '';
+                                                Object.entries(columnMapping).forEach(([c, f]) => {
+                                                    const val = row[parseInt(c)] || '';
+                                                    if (f === 'revenue') rev = parseFloat(val.replace(/[^0-9.]/g, '')) || 0;
+                                                    if (f === 'email') email = val;
+                                                    if (f === 'state') st = val;
+                                                });
+                                                const quality = aiLeads[idx]?.quality || 'minimal';
+
+                                                if (rev < minRev || rev > maxRev) return null;
+                                                if (stateFilter.length > 0 && !stateFilter.includes(st.toUpperCase())) return null;
+                                                if (filterHideMissingEmail && (!email || email === 'unknown')) return null;
+                                                if (filterQuality === 'complete' && quality !== 'complete') return null;
+                                                if (filterQuality === 'partial' && quality === 'minimal') return null;
+                                                return idx;
+                                            }).filter((i): i is number => i !== null);
+
+                                            return (
+                                                <>
+                                                    <div className="text-xs text-slate-500 mb-2">
+                                                        Showing <span className="font-bold text-slate-700">{filteredIndices.length}</span> of {parsedRows.length} leads
+                                                        {selectedRows.size > 0 && <> · <span className="font-bold text-amber-600">{selectedRows.size} selected</span></>}
+                                                    </div>
+
+                                                    <div className="flex-1 overflow-y-auto border border-slate-200 rounded-xl bg-white">
+                                                        <table className="w-full text-sm text-left">
+                                                            <thead className="bg-slate-50 sticky top-0 z-10 text-slate-600 font-medium shadow-sm">
+                                                                <tr>
+                                                                    <th className="w-10 px-3 py-3"><input type="checkbox" checked={selectedRows.size === filteredIndices.length && filteredIndices.length > 0} onChange={() => {
+                                                                        if (selectedRows.size === filteredIndices.length) setSelectedRows(new Set());
+                                                                        else setSelectedRows(new Set(filteredIndices));
+                                                                    }} /></th>
+                                                                    <th className="w-8 px-1 py-3"></th>
+                                                                    <th className="px-3 py-3">Business</th>
+                                                                    <th className="px-3 py-3">Contact</th>
+                                                                    <th className="px-3 py-3">Email</th>
+                                                                    <th className="px-3 py-3">Revenue</th>
+                                                                    <th className="px-3 py-3">Phone</th>
+                                                                    <th className="px-3 py-3">State</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="divide-y divide-slate-100">
+                                                                {filteredIndices.map(idx => {
+                                                                    const row = parsedRows[idx];
+                                                                    const isSelected = selectedRows.has(idx);
+                                                                    const quality = aiLeads[idx]?.quality || 'minimal';
+                                                                    let name = "", email = "", rev = "", phone = "", st = "", ind = "", contact = "";
+                                                                    Object.entries(columnMapping).forEach(([c, f]) => {
+                                                                        const val = row[parseInt(c)] || '';
+                                                                        if (f === 'businessName') name = val;
+                                                                        if (f === 'email') email = val;
+                                                                        if (f === 'revenue') rev = val;
+                                                                        if (f === 'phone') phone = val;
+                                                                        if (f === 'state') st = val;
+                                                                        if (f === 'industry') ind = val;
+                                                                        if (f === 'contactName') contact = val;
+                                                                    });
+
+                                                                    const qualityIcon = quality === 'complete'
+                                                                        ? <ShieldCheck size={14} className="text-emerald-500" />
+                                                                        : quality === 'partial'
+                                                                            ? <Shield size={14} className="text-amber-500" />
+                                                                            : <ShieldAlert size={14} className="text-red-400" />;
+
+                                                                    return (
+                                                                        <tr key={idx}
+                                                                            className={`transition-colors cursor-pointer ${isSelected ? 'bg-amber-50/30 hover:bg-amber-50/50' : 'opacity-50 hover:opacity-80'}`}
+                                                                            onClick={() => toggleRow(idx)}
+                                                                        >
+                                                                            <td className="px-3 py-2"><input type="checkbox" checked={isSelected} readOnly className="pointer-events-none" /></td>
+                                                                            <td className="px-1 py-2" title={`Quality: ${quality}`}>{qualityIcon}</td>
+                                                                            <td className="px-3 py-2 font-medium text-slate-900 text-xs">{name || <span className="text-red-400 italic">Missing</span>}</td>
+                                                                            <td className="px-3 py-2 text-slate-600 text-xs">{contact || <span className="text-slate-300">—</span>}</td>
+                                                                            <td className="px-3 py-2 text-slate-600 text-xs">{email === 'unknown' ? <span className="text-red-300 italic">—</span> : email}</td>
+                                                                            <td className="px-3 py-2 text-slate-600 font-mono text-xs">{rev === '0' ? <span className="text-slate-300">$0</span> : `$${Number(rev).toLocaleString()}`}</td>
+                                                                            <td className="px-3 py-2 text-slate-600 text-xs">{phone === 'unknown' ? <span className="text-slate-300">—</span> : phone}</td>
+                                                                            <td className="px-3 py-2 text-slate-600 text-xs">{st === 'Unknown' ? <span className="text-slate-300">—</span> : st}</td>
+                                                                        </tr>
+                                                                    );
+                                                                })}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </>
+                                            );
+                                        })()}
 
                                         <div className="mt-4 space-y-3">
                                             {/* Bulk Import Progress Bar */}
