@@ -19,7 +19,7 @@ export async function generateLeadScore(businessName: string, revenue: number, i
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         const prompt = `
       You are a Senior Venture Capital Analyst and Lead Scorer. 
@@ -78,11 +78,25 @@ export async function extractLeadsFromText(rawText: string): Promise<ExtractedLe
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         const prompt = `
-      You are an expert Data Extraction AI specializing in MCA (Merchant Cash Advance), broker, and B2B lead spreadsheets.
+      You are an expert Data Extraction AI specializing in MCA (Merchant Cash Advance), broker, and B2B lead data.
       Parse the following data and extract lead information into a structured JSON array.
+
+      INPUT FORMAT AWARENESS — the data may come from:
+      • Spreadsheets (CSV, tab-delimited, Google Sheets copy-paste)
+      • Emails (forwarded or pasted) — look for From/To/Subject/CC headers, email signatures, and body text
+      • Contact lists, CRM exports, or raw text
+      • Web pages or scraped content
+
+      EMAIL-SPECIFIC PATTERNS to recognize:
+      • "From: Name <email@domain.com>" → extract contact name and email
+      • Email signatures: Name, Title, Company, Phone, Email at the bottom of messages
+      • "Forwarded message" or "-----Original Message-----" markers
+      • Multiple emails in a thread — extract each unique contact
+      • "CC:" and "BCC:" fields — extract all email addresses
+      • Body mentions of businesses, revenue figures, phone numbers
 
       COLUMN NAME AWARENESS — the data may use any of these header variations:
       • Business: "DBA", "Legal Name", "Merchant", "Business Name", "Company", "Corp", "Entity"
@@ -107,7 +121,7 @@ export async function extractLeadsFromText(rawText: string): Promise<ExtractedLe
       • "partial" = has businessName + at least one of (email, phone) 
       • "minimal" = only businessName or very sparse data
 
-      Extract these fields for EACH lead/row found:
+      Extract these fields for EACH lead/row/contact found:
       - businessName (string): Company or DBA name
       - email (string): email address, or "unknown" if not found
       - phone (string): phone number, or "unknown" if not found
@@ -316,7 +330,7 @@ export async function generateDeepAnalysis(businessName: string, industry?: stri
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         const prompt = `
       You are a Strategic Business Consultant.
@@ -398,7 +412,7 @@ DO NOT mention pricing, demos, calls, or your product features. Pure value-add o
     const toneInstruction = toneGuides[temperature || 'Warm'];
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
         const prompt = `
 You are a senior B2B relationship builder (NOT a hard-sell salesperson). 
 Write a personalized outreach email that matches the tone guide below EXACTLY.
