@@ -5,6 +5,43 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 // Initialize Gemini API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
+// ─── Resilient Gemini caller with retry + model fallback ──────────────
+const MODEL_CHAIN = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.0-flash-lite"];
+const MAX_RETRIES = 2;
+
+async function callGemini(prompt: string): Promise<string> {
+    let lastError: Error | null = null;
+
+    for (const modelName of MODEL_CHAIN) {
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                const model = genAI.getGenerativeModel({ model: modelName });
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                return response.text();
+            } catch (error: unknown) {
+                lastError = error as Error;
+                const status = (error as { status?: number }).status;
+
+                if (status === 429) {
+                    // Rate limited — wait with backoff then retry or move to next model
+                    const delay = Math.min(2000 * Math.pow(2, attempt), 15000);
+                    console.warn(`[Gemini] 429 on ${modelName} (attempt ${attempt + 1}/${MAX_RETRIES + 1}), waiting ${delay}ms...`);
+                    await new Promise(r => setTimeout(r, delay));
+                    continue;
+                }
+
+                // Non-rate-limit error — skip to next model
+                console.error(`[Gemini] ${modelName} failed:`, (error as Error).message);
+                break;
+            }
+        }
+        console.warn(`[Gemini] Exhausted retries on ${modelName}, trying next model...`);
+    }
+
+    throw lastError || new Error("All Gemini models failed");
+}
+
 export type AIAnalysisResult = {
     score: number;
     temperature: 'Hot' | 'Warm' | 'Lukewarm' | 'Cold';
@@ -19,8 +56,6 @@ export async function generateLeadScore(businessName: string, revenue: number, i
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
         const prompt = `
       You are a Senior Venture Capital Analyst and Lead Scorer. 
       Analyze the following lead and provide a scoring assessment.
@@ -46,9 +81,7 @@ export async function generateLeadScore(businessName: string, revenue: number, i
       }
     `;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
+        const text = await callGemini(prompt);
 
         // Clean up markdown code blocks if present
         const jsonString = text.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -78,8 +111,6 @@ export async function extractLeadsFromText(rawText: string): Promise<ExtractedLe
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
         const prompt = `
       You are an expert Data Extraction AI specializing in MCA (Merchant Cash Advance), broker, and B2B lead data.
       Parse the following data and extract lead information into a structured JSON array.
@@ -142,9 +173,7 @@ export async function extractLeadsFromText(rawText: string): Promise<ExtractedLe
       ]
     `;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
+        const text = await callGemini(prompt);
         const jsonString = text.replace(/```json/g, '').replace(/```/g, '').trim();
         return JSON.parse(jsonString) as ExtractedLead[];
     } catch (error) {
@@ -330,8 +359,6 @@ export async function generateDeepAnalysis(businessName: string, industry?: stri
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
         const prompt = `
       You are a Strategic Business Consultant.
       Analyze the following business and provide a deep strategic assessment.
@@ -356,9 +383,7 @@ export async function generateDeepAnalysis(businessName: string, industry?: stri
       }
     `;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
+        const text = await callGemini(prompt);
         const jsonString = text.replace(/```json/g, '').replace(/```/g, '').trim();
 
         return JSON.parse(jsonString) as DeepAnalysisResult;
@@ -412,7 +437,6 @@ DO NOT mention pricing, demos, calls, or your product features. Pure value-add o
     const toneInstruction = toneGuides[temperature || 'Warm'];
 
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
         const prompt = `
 You are a senior B2B relationship builder (NOT a hard-sell salesperson). 
 Write a personalized outreach email that matches the tone guide below EXACTLY.
@@ -446,9 +470,7 @@ Return ONLY raw JSON:
 }
         `;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
+        const text = await callGemini(prompt);
         const jsonString = text.replace(/```json/g, '').replace(/```/g, '').trim();
 
         return JSON.parse(jsonString) as EmailDraftResult;
