@@ -3,17 +3,19 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, BarChart3, KanbanSquare, Zap, ClipboardList, Settings } from 'lucide-react';
+import { LayoutDashboard, BarChart3, KanbanSquare, Zap, ClipboardList, Settings, Plus } from 'lucide-react';
 import { UserButton } from "@clerk/nextjs";
+import { useModal } from '@/context/ModalContext';
 
 export const Sidebar = () => {
     const pathname = usePathname();
     const isActive = (path: string) => pathname === path;
+    const { openAddLead } = useModal();
 
     return (
         <aside className="hidden md:flex w-16 hover:w-52 flex-shrink-0 flex-col py-5 sticky top-0 h-screen z-20 transition-all duration-300 overflow-hidden group/sidebar" style={{ background: 'linear-gradient(to bottom, #1a1108, #1a1108, #0f0a04)' }}>
             {/* Logo */}
-            <div className="px-3 mb-8 flex items-center gap-3 min-w-0">
+            <div className="px-3 mb-6 flex items-center gap-3 min-w-0">
                 <div className="relative w-9 h-9 min-w-[36px] rounded-xl flex items-center justify-center shadow-lg text-white" style={{ background: 'linear-gradient(135deg, #e09f36, #c8891e)', boxShadow: '0 4px 14px rgba(224,159,54,0.3)' }}>
                     <Zap size={18} strokeWidth={2.5} />
                     <div className="absolute inset-0 rounded-xl blur-lg opacity-40" style={{ background: 'linear-gradient(135deg, #e09f36, #c8891e)' }} />
@@ -21,6 +23,20 @@ export const Sidebar = () => {
                 <span className="text-lg font-bold tracking-tight text-white whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">
                     LeadFlow<span className="ml-0.5" style={{ color: '#e09f36' }}>CRM</span>
                 </span>
+            </div>
+
+            {/* Quick Add Button */}
+            <div className="px-2 mb-4">
+                <button
+                    onClick={openAddLead}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 font-semibold text-white group/add"
+                    style={{ background: 'linear-gradient(135deg, #e09f36, #c8891e)', boxShadow: '0 2px 8px rgba(224,159,54,0.3)' }}
+                >
+                    <span className="min-w-[20px] flex items-center justify-center">
+                        <Plus size={18} strokeWidth={2.5} />
+                    </span>
+                    <span className="text-sm whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">Add Lead</span>
+                </button>
             </div>
 
             {/* Main Navigation */}

@@ -2,11 +2,13 @@
 
 import React from 'react';
 import { useLeads } from '@/context/LeadContext';
+import { useModal } from '@/context/ModalContext';
 import { KanbanBoard } from '@/components/KanbanBoard';
-import { KanbanSquare, TrendingUp } from 'lucide-react';
+import { KanbanSquare, TrendingUp, Plus } from 'lucide-react';
 
 export default function PipelineView() {
     const { leads, updateLeadStage, stats } = useLeads();
+    const { openAddLead } = useModal();
 
     const stageCount = (stage: string) => leads.filter(l => l.pipelineStage === stage).length;
 
@@ -26,6 +28,14 @@ export default function PipelineView() {
                         </div>
                     )}
                 </div>
+                <button
+                    onClick={openAddLead}
+                    className="text-white px-4 py-2 rounded-xl font-semibold flex items-center gap-2 transition-all text-sm"
+                    style={{ background: 'linear-gradient(to right, #e09f36, #c8891e)', boxShadow: '0 4px 14px rgba(224,159,54,0.25)' }}
+                >
+                    <Plus size={16} strokeWidth={2.5} />
+                    <span className="hidden sm:inline">Add Lead</span>
+                </button>
             </header>
             <div className="flex-1 overflow-hidden p-4 md:p-6">
                 <KanbanBoard leads={leads} onStageChange={updateLeadStage} />

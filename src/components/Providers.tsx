@@ -1,11 +1,14 @@
 "use client";
 
 import { LeadProvider } from "@/context/LeadContext";
+import { ModalProvider } from "@/context/ModalContext";
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
         <LeadProvider>
-            {children}
+            <ModalProvider>
+                {children}
+            </ModalProvider>
         </LeadProvider>
     );
 }

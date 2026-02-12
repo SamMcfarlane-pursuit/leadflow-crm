@@ -2,19 +2,19 @@
 
 import React, { useState } from 'react';
 import { useLeads } from '@/context/LeadContext';
+import { useModal } from '@/context/ModalContext';
 import { Plus, Bell, Sparkles, RefreshCw, CloudDownload } from 'lucide-react';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 import RecentLeads from '@/components/RecentLeads';
-import AddLeadModal from '@/components/AddLeadModal';
 import LeadIntelligenceModal from '@/components/LeadIntelligenceModal';
 import { SessionReplayModal } from '@/components/Placeholders';
 import { Lead } from '@/types';
 
 export default function DashboardView() {
     const { leads, stats, addLead, addLog, syncSheets, isSyncing, lastSyncTime } = useLeads();
+    const { openAddLead } = useModal();
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
     const [analyzingLead, setAnalyzingLead] = useState<{ lead: Lead; type: 'strategy' | 'email' } | null>(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleAnalyze = (lead: Lead, type: 'strategy' | 'email') => {
         setAnalyzingLead({ lead, type });
@@ -27,13 +27,6 @@ export default function DashboardView() {
     return (
         <>
             {/* MODALS */}
-            {isModalOpen && (
-                <AddLeadModal
-                    onLeadProcessed={addLead}
-                    addLog={addLog}
-                    onClose={() => setIsModalOpen(false)}
-                />
-            )}
             {selectedLead && <SessionReplayModal onClose={() => setSelectedLead(null)} />}
             {analyzingLead && (
                 <LeadIntelligenceModal
@@ -96,7 +89,7 @@ export default function DashboardView() {
                     )}
 
                     <button
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={openAddLead}
                         className="text-white px-4 py-2 rounded-xl font-semibold flex items-center gap-2 transition-all text-sm"
                         style={{ background: 'linear-gradient(to right, #e09f36, #c8891e)', boxShadow: '0 4px 14px rgba(224,159,54,0.25)' }}
                     >
