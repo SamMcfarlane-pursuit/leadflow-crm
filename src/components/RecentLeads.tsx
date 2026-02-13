@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Lead } from '../types';
-import { Target, Phone, Mail, Ban, CheckCircle2, Search, ChevronLeft, ChevronRight, Loader2, Download } from 'lucide-react';
+import { Phone, Mail, Ban, CheckCircle2, Search, ChevronLeft, ChevronRight, Loader2, Download } from 'lucide-react';
 import { useLeads } from '@/context/LeadContext';
 
 interface RecentLeadsProps {
     onViewSession: (lead: Lead) => void;
-    onAnalyze: (lead: Lead, type: 'strategy' | 'email') => void;
+    onAnalyze: (lead: Lead) => void;
 }
 
 type TempFilter = 'All' | 'Hot' | 'Warm' | 'Lukewarm' | 'Cold';
@@ -253,14 +253,8 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ onViewSession, onAnalyze }) =
                                         <td className="px-2 py-2.5 text-right">
                                             <div className="flex items-center justify-end gap-1">
                                                 <button
-                                                    onClick={() => onAnalyze(lead, 'strategy')}
+                                                    onClick={() => onAnalyze(lead)}
                                                     className="inline-flex items-center gap-1 px-2 py-1.5 text-[10px] font-semibold rounded-md bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-all"
-                                                    title="AI Strategy">
-                                                    <Target size={10} /> Strategy
-                                                </button>
-                                                <button
-                                                    onClick={() => onAnalyze(lead, 'email')}
-                                                    className="inline-flex items-center gap-1 px-2 py-1.5 text-[10px] font-semibold rounded-md bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-all"
                                                     title="Draft Email">
                                                     <Mail size={10} /> Email
                                                 </button>
@@ -329,10 +323,7 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ onViewSession, onAnalyze }) =
                                     </div>
                                 </div>
                                 <div className="flex gap-2 border-t border-slate-200/60 pt-3">
-                                    <button onClick={() => onAnalyze(lead, 'strategy')} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700 font-semibold active:scale-95 transition-transform">
-                                        <Target size={13} /> Strategy
-                                    </button>
-                                    <button onClick={() => onAnalyze(lead, 'email')} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-purple-50 border border-purple-200 rounded-xl text-sm text-purple-700 font-semibold active:scale-95 transition-transform">
+                                    <button onClick={() => onAnalyze(lead)} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700 font-semibold active:scale-95 transition-transform">
                                         <Mail size={13} /> Email
                                     </button>
                                     <button onClick={() => onViewSession(lead)} className="w-12 flex items-center justify-center bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 active:scale-95 transition-transform">

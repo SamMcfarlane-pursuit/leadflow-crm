@@ -14,10 +14,10 @@ export default function DashboardView() {
     const { leads, stats, addLead, addLog, syncSheets, isSyncing, lastSyncTime } = useLeads();
     const { openAddLead } = useModal();
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-    const [analyzingLead, setAnalyzingLead] = useState<{ lead: Lead; type: 'strategy' | 'email' } | null>(null);
+    const [analyzingLead, setAnalyzingLead] = useState<Lead | null>(null);
 
-    const handleAnalyze = (lead: Lead, type: 'strategy' | 'email') => {
-        setAnalyzingLead({ lead, type });
+    const handleAnalyze = (lead: Lead) => {
+        setAnalyzingLead(lead);
     };
 
     // Time-of-day greeting
@@ -30,8 +30,7 @@ export default function DashboardView() {
             {selectedLead && <SessionReplayModal onClose={() => setSelectedLead(null)} />}
             {analyzingLead && (
                 <LeadIntelligenceModal
-                    lead={analyzingLead.lead}
-                    initialTab={analyzingLead.type}
+                    lead={analyzingLead}
                     onClose={() => setAnalyzingLead(null)}
                 />
             )}
