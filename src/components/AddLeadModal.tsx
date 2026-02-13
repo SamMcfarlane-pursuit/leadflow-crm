@@ -216,17 +216,26 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ onLeadProcessed, addLog, on
         return ',';
     };
 
-    /** Parse a single CSV line respecting quoted fields */
+    /** Parse a single CSV line respecting quoted fields (handles escaped "" quotes) */
     const parseCSVLine = (line: string, delim: string): string[] => {
         if (delim === '\t') return line.split('\t').map(c => c.trim());
 
-        // For comma-delimited: respect quoted fields
+        // For comma-delimited: respect quoted fields and escaped quotes
         const cells: string[] = [];
         let current = '';
         let inQuotes = false;
         for (let i = 0; i < line.length; i++) {
             const ch = line[i];
-            if (ch === '"') { inQuotes = !inQuotes; continue; }
+            if (ch === '"') {
+                // Handle escaped quotes ("")
+                if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+                    current += '"';
+                    i++; // skip next quote
+                    continue;
+                }
+                inQuotes = !inQuotes;
+                continue;
+            }
             if (ch === ',' && !inQuotes) {
                 cells.push(current.trim());
                 current = '';
@@ -240,7 +249,6 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ onLeadProcessed, addLog, on
         const fixed: string[] = [];
         for (let i = 0; i < cells.length; i++) {
             const c = cells[i];
-            // If previous cell looks like a partial dollar and this cell is just digits
             if (fixed.length > 0 && /^\$[\d.]+$/.test(fixed[fixed.length - 1]) && /^\d{3}$/.test(c)) {
                 fixed[fixed.length - 1] += ',' + c;
             } else {
@@ -679,7 +687,7 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                             <input
                                                 ref={fileInputRef}
                                                 type="file"
-                                                accept=".csv,.txt,.json,.tsv,.xlsx,.xls,.pdf,.doc,.docx"
+                                                accept=".csv,.txt,.json,.tsv,.xlsx,.xls"
                                                 className="hidden"
                                                 onChange={(e) => {
                                                     const file = e.target.files?.[0];
@@ -940,7 +948,14 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                                                             <td className="px-3 py-2 font-medium text-slate-900 text-xs">{name || <span className="text-red-400 italic">Missing</span>}</td>
                                                                             <td className="px-3 py-2 text-slate-600 text-xs">{contact || <span className="text-slate-300">—</span>}</td>
                                                                             <td className="px-3 py-2 text-slate-600 text-xs">{email === 'unknown' ? <span className="text-red-300 italic">—</span> : email}</td>
-                                                                            <td className="px-3 py-2 text-slate-600 font-mono text-xs">{rev === '0' ? <span className="text-slate-300">$0</span> : `$${Number(rev).toLocaleString()}`}</td>
+                                                                            <td className="px-3 py-2 text-slate-600 font-mono text-xs">{(() => {
+                                                                                let r = (rev || '0').toString().toLowerCase().replace(/[^0-9km.]/g, '');
+                                                                                let m = 1;
+                                                                                if (r.includes('m')) { m = 1000000; r = r.replace('m', ''); }
+                                                                                else if (r.includes('k')) { m = 1000; r = r.replace('k', ''); }
+                                                                                const n = (parseFloat(r) * m) || 0;
+                                                                                return n === 0 ? <span className="text-slate-300">$0</span> : `$${n.toLocaleString()}`;
+                                                                            })()}</td>
                                                                             <td className="px-3 py-2 text-slate-600 text-xs">{phone === 'unknown' ? <span className="text-slate-300">—</span> : phone}</td>
                                                                             <td className="px-3 py-2 text-slate-600 text-xs">{st === 'Unknown' ? <span className="text-slate-300">—</span> : st}</td>
                                                                         </tr>

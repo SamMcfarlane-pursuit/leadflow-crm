@@ -12,7 +12,7 @@ export const Terminal = ({ logs }: { logs: LogEntry[] }) => (
         {logs.length === 0 && <div className="text-slate-600">System ready. Waiting for events...</div>}
         {logs.slice().reverse().map(log => (
             <div key={log.id} className="mb-1 border-b border-slate-800/50 pb-1">
-                <span className="text-slate-500">[{log.timestamp.toLocaleTimeString()}]</span>{' '}
+                <span className="text-slate-500">[{new Date(log.timestamp).toLocaleTimeString()}]</span>{' '}
                 <span className={log.level === 'ERROR' ? 'text-red-400' : log.level === 'WARN' ? 'text-amber-400' : 'text-emerald-400'}>
                     [{log.module}]
                 </span>{' '}

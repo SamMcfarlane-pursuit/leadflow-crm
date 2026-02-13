@@ -18,6 +18,14 @@ export async function sendEmail(to: string, subject: string, body: string) {
 
     // ─── Real Sending via Brevo Transactional API ─────────────────────
     try {
+        // Sanitize body to prevent XSS in HTML emails
+        const escapeHtml = (str: string) => str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+
         const response = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
             headers: {
@@ -28,9 +36,9 @@ export async function sendEmail(to: string, subject: string, body: string) {
             body: JSON.stringify({
                 sender: { name: SENDER_NAME, email: SENDER_EMAIL },
                 to: [{ email: to }],
-                subject,
+                subject: escapeHtml(subject),
                 htmlContent: `<div style="font-family: system-ui, sans-serif; line-height: 1.6; color: #333; max-width: 600px;">
-                    ${body.split('\n').map(line => `<p style="margin: 0 0 8px 0;">${line}</p>`).join('')}
+                    ${escapeHtml(body).split('\n').map(line => `<p style="margin: 0 0 8px 0;">${line}</p>`).join('')}
                 </div>`,
                 textContent: body,
             }),

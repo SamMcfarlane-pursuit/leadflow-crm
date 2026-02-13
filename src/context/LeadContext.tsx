@@ -115,6 +115,7 @@ export const LeadProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         fetchPage(1);
         refreshStats();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Refresh current page
