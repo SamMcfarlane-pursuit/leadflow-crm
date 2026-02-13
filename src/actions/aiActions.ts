@@ -7,7 +7,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
 
 // ─── Fast Gemini caller — speed-optimized, single attempt ─────────────
 async function callGemini(prompt: string, maxTokens = 1024): Promise<string> {
-    const models = ["gemini-2.0-flash", "gemini-2.0-flash-lite"];
+    const models = ["gemini-2.5-flash", "gemini-2.0-flash"];
     let lastError: Error | null = null;
 
     for (const modelName of models) {
