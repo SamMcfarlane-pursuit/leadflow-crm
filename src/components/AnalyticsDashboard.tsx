@@ -158,7 +158,7 @@ const AnalyticsDashboard: React.FC<MetricsProps> = ({ leads }) => {
                                         angle={-35}
                                         textAnchor="end"
                                         height={50}
-                                        interval={0}
+                                        interval="preserveStartEnd"
                                     />
                                     <YAxis
                                         yAxisId="left"
