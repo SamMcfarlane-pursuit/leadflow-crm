@@ -60,7 +60,7 @@ export const Sidebar = () => {
 
             {/* Bottom Section */}
             <div className="px-2 mt-auto">
-                <div className="flex items-center gap-3 px-2 py-2.5 rounded-xl border" style={{ backgroundColor: 'rgba(42,30,20,0.5)', borderColor: 'rgba(90,70,49,0.5)' }}>
+                <div className="flex items-center gap-3 px-2 py-2.5 rounded-xl border" style={{ backgroundColor: 'rgba(42,30,20,0.5)', borderColor: 'rgba(90,70,49,0.5)' }} suppressHydrationWarning>
                     <UserButton afterSignOutUrl="/sign-in" />
                     <div className="min-w-0 whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">
                         <p className="text-sm font-medium text-slate-200 truncate">Account</p>
