@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, BarChart3, KanbanSquare, Zap, ClipboardList, Settings, Plus } from 'lucide-react';
@@ -11,6 +11,8 @@ export const Sidebar = () => {
     const pathname = usePathname();
     const isActive = (path: string) => pathname === path;
     const { openAddLead } = useModal();
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => setMounted(true), []);
 
     return (
         <aside className="hidden md:flex w-16 hover:w-52 flex-shrink-0 flex-col py-5 sticky top-0 h-screen z-20 transition-all duration-300 overflow-hidden group/sidebar" style={{ background: 'linear-gradient(to bottom, #1a1108, #1a1108, #0f0a04)' }}>
@@ -60,8 +62,12 @@ export const Sidebar = () => {
 
             {/* Bottom Section */}
             <div className="px-2 mt-auto">
-                <div className="flex items-center gap-3 px-2 py-2.5 rounded-xl border" style={{ backgroundColor: 'rgba(42,30,20,0.5)', borderColor: 'rgba(90,70,49,0.5)' }} suppressHydrationWarning>
-                    <UserButton afterSignOutUrl="/sign-in" />
+                <div className="flex items-center gap-3 px-2 py-2.5 rounded-xl border" style={{ backgroundColor: 'rgba(42,30,20,0.5)', borderColor: 'rgba(90,70,49,0.5)' }}>
+                    {mounted ? (
+                        <UserButton afterSignOutUrl="/sign-in" />
+                    ) : (
+                        <div className="w-7 h-7 rounded-full bg-slate-700/50" />
+                    )}
                     <div className="min-w-0 whitespace-nowrap opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300">
                         <p className="text-sm font-medium text-slate-200 truncate">Account</p>
                         <p className="text-[11px]" style={{ color: '#5a4631' }}>Manage profile</p>

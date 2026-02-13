@@ -24,6 +24,7 @@ function SettingsView() {
 
             <div className="flex justify-center">
                 <UserProfile
+                    routing="hash"
                     appearance={{
                         elements: {
                             rootBox: "w-full max-w-3xl",
