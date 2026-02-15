@@ -6,11 +6,11 @@ import { X, Sparkles, Copy, Check, AlertTriangle, Mail, Send, RefreshCw, FileTex
 
 type ToneType = 'Hot' | 'Warm' | 'Lukewarm' | 'Cold';
 
-const TONE_CONFIG: Record<ToneType, { emoji: string; label: string; color: string; description: string }> = {
-    Hot: { emoji: '🔥', label: 'Hot', color: 'rose', description: 'Direct — propose a call' },
-    Warm: { emoji: '🌤', label: 'Warm', color: 'amber', description: 'Consultative — soft CTA' },
-    Lukewarm: { emoji: '☁️', label: 'Lukewarm', color: 'sky', description: 'Curious — lead with value' },
-    Cold: { emoji: '❄️', label: 'Cold', color: 'slate', description: 'Gentle — zero pressure' },
+const TONE_CONFIG: Record<ToneType, { emoji: string; label: string; description: string; activeStyle: React.CSSProperties; }> = {
+    Hot: { emoji: '🔥', label: 'Hot', description: 'Direct — propose a call', activeStyle: { backgroundColor: '#fff1f2', color: '#be123c', borderColor: '#fda4af', boxShadow: '0 0 0 1px #fecdd3' } },
+    Warm: { emoji: '🌤', label: 'Warm', description: 'Consultative — soft CTA', activeStyle: { backgroundColor: '#fffbeb', color: '#b45309', borderColor: '#fcd34d', boxShadow: '0 0 0 1px #fde68a' } },
+    Lukewarm: { emoji: '☁️', label: 'Lukewarm', description: 'Curious — lead with value', activeStyle: { backgroundColor: '#f0f9ff', color: '#0369a1', borderColor: '#7dd3fc', boxShadow: '0 0 0 1px #bae6fd' } },
+    Cold: { emoji: '❄️', label: 'Cold', description: 'Gentle — zero pressure', activeStyle: { backgroundColor: '#f1f5f9', color: '#334155', borderColor: '#94a3b8', boxShadow: '0 0 0 1px #cbd5e1' } },
 };
 
 const PURPOSE_CONFIG: Record<EmailPurpose, { icon: React.ReactNode; label: string; short: string }> = {
@@ -42,6 +42,7 @@ const LeadIntelligenceModal: React.FC<LeadIntelligenceModalProps> = ({ lead, onC
     // Sender info — persisted in localStorage
     const [senderEmail, setSenderEmail] = useState('');
     const [senderPhone, setSenderPhone] = useState('');
+    const [senderName, setSenderName] = useState('');
 
     // UI
     const [copied, setCopied] = useState(false);
@@ -54,8 +55,10 @@ const LeadIntelligenceModal: React.FC<LeadIntelligenceModalProps> = ({ lead, onC
     useEffect(() => {
         const savedEmail = localStorage.getItem('leadflow_sender_email') || '';
         const savedPhone = localStorage.getItem('leadflow_sender_phone') || '';
+        const savedName = localStorage.getItem('leadflow_sender_name') || '';
         setSenderEmail(savedEmail);
         setSenderPhone(savedPhone);
+        setSenderName(savedName);
     }, []);
 
     // Persist sender info on change
@@ -67,14 +70,20 @@ const LeadIntelligenceModal: React.FC<LeadIntelligenceModalProps> = ({ lead, onC
         setSenderPhone(val);
         localStorage.setItem('leadflow_sender_phone', val);
     };
+    const handleSenderNameChange = (val: string) => {
+        setSenderName(val);
+        localStorage.setItem('leadflow_sender_name', val);
+    };
 
-    // Sync editable fields when emailData changes
+    // Sync editable fields when emailData changes — auto-replace [Your Name]
     useEffect(() => {
         if (emailData) {
             setEditSubject(emailData.subject);
-            setEditBody(emailData.body);
+            const name = senderName || localStorage.getItem('leadflow_sender_name') || '';
+            const body = name ? emailData.body.replace(/\[Your Name\]/g, name) : emailData.body;
+            setEditBody(body);
         }
-    }, [emailData]);
+    }, [emailData, senderName]);
 
     // Load email draft on mount
     useEffect(() => {
@@ -227,10 +236,11 @@ const LeadIntelligenceModal: React.FC<LeadIntelligenceModalProps> = ({ lead, onC
                                                         key={t}
                                                         onClick={() => handleToneChange(t)}
                                                         disabled={drafting}
-                                                        className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all border ${active
-                                                            ? `bg-${cfg.color}-50 text-${cfg.color}-700 border-${cfg.color}-300 ring-1 ring-${cfg.color}-200`
-                                                            : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'
-                                                            } disabled:opacity-50`}
+                                                        className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all border disabled:opacity-50`}
+                                                        style={active
+                                                            ? cfg.activeStyle
+                                                            : { backgroundColor: '#fff', color: '#94a3b8', borderColor: '#e2e8f0' }
+                                                        }
                                                         title={cfg.description}
                                                     >
                                                         {cfg.emoji} {cfg.label}
@@ -251,7 +261,13 @@ const LeadIntelligenceModal: React.FC<LeadIntelligenceModalProps> = ({ lead, onC
                                             {/* From — Sender info */}
                                             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
                                                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">From (Your Info)</label>
-                                                <div className="grid grid-cols-2 gap-2">
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    <input
+                                                        value={senderName}
+                                                        onChange={e => handleSenderNameChange(e.target.value)}
+                                                        className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-[12px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition-all placeholder:text-slate-300"
+                                                        placeholder="Your Name"
+                                                    />
                                                     <div className="relative">
                                                         <Mail size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                                                         <input

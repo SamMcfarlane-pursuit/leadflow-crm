@@ -22,7 +22,7 @@ const isUrl = (text: string): boolean => {
 };
 
 /* ─── Synonym Dictionary for Auto-Mapping ────────────────────────────── */
-type CrmField = 'businessName' | 'email' | 'revenue' | 'phone' | 'state' | 'industry' | 'contactName' | 'ignore';
+type CrmField = 'businessName' | 'email' | 'revenue' | 'phone' | 'state' | 'industry' | 'contactName' | 'firstName' | 'lastName' | 'ignore';
 
 const FIELD_SYNONYMS: Record<Exclude<CrmField, 'ignore'>, string[]> = {
     businessName: ['company', 'business', 'name', 'dba', 'merchant', 'legal name', 'legal', 'corp', 'llc', 'entity', 'firm', 'account', 'organization', 'org'],
@@ -31,7 +31,9 @@ const FIELD_SYNONYMS: Record<Exclude<CrmField, 'ignore'>, string[]> = {
     phone: ['phone', 'tel', 'cell', 'mobile', 'fax', 'number', 'work phone', 'contact phone', 'ph'],
     state: ['state', 'st', 'location', 'region', 'territory', 'province', 'area'],
     industry: ['industry', 'sic', 'type', 'sector', 'vertical', 'category', 'business type', 'niche'],
-    contactName: ['owner', 'contact', 'principal', 'agent', 'rep', 'first name', 'last name', 'full name', 'contact name', 'manager', 'person'],
+    contactName: ['owner', 'contact', 'principal', 'agent', 'rep', 'full name', 'contact name', 'manager', 'person'],
+    firstName: ['first name', 'first', 'fname', 'given name', 'given'],
+    lastName: ['last name', 'last', 'lname', 'surname', 'family name', 'family'],
 };
 
 const FIELD_LABELS: Record<Exclude<CrmField, 'ignore'>, string> = {
@@ -42,6 +44,8 @@ const FIELD_LABELS: Record<Exclude<CrmField, 'ignore'>, string> = {
     state: 'State',
     industry: 'Industry',
     contactName: 'Contact Name',
+    firstName: 'First Name',
+    lastName: 'Last Name',
 };
 
 function scoreColumnMatch(header: string): { field: CrmField; confidence: number } {
@@ -406,6 +410,14 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ onLeadProcessed, addLog, on
                     leadObj.state = leadObj.state || undefined;
                     leadObj.industry = leadObj.industry || undefined;
                     leadObj.contactName = leadObj.contactName || undefined;
+
+                    // Merge separate firstName + lastName into contactName
+                    if (leadObj.firstName || leadObj.lastName) {
+                        const merged = [leadObj.firstName, leadObj.lastName].filter(Boolean).join(' ').trim();
+                        if (merged) leadObj.contactName = merged;
+                        delete leadObj.firstName;
+                        delete leadObj.lastName;
+                    }
 
                     return leadObj;
                 });
@@ -920,7 +932,7 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                                                     const row = parsedRows[idx];
                                                                     const isSelected = selectedRows.has(idx);
                                                                     const quality = aiLeads[idx]?.quality || 'minimal';
-                                                                    let name = "", email = "", rev = "", phone = "", st = "", ind = "", contact = "";
+                                                                    let name = "", email = "", rev = "", phone = "", st = "", ind = "", contact = "", fName = "", lName = "";
                                                                     Object.entries(columnMapping).forEach(([c, f]) => {
                                                                         const val = row[parseInt(c)] || '';
                                                                         if (f === 'businessName') name = val;
@@ -930,7 +942,13 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                                                         if (f === 'state') st = val;
                                                                         if (f === 'industry') ind = val;
                                                                         if (f === 'contactName') contact = val;
+                                                                        if (f === 'firstName') fName = val;
+                                                                        if (f === 'lastName') lName = val;
                                                                     });
+                                                                    // Merge first + last name for display
+                                                                    if (!contact && (fName || lName)) {
+                                                                        contact = [fName, lName].filter(Boolean).join(' ');
+                                                                    }
 
                                                                     const qualityIcon = quality === 'complete'
                                                                         ? <ShieldCheck size={14} className="text-emerald-500" />

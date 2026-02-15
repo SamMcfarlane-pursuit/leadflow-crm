@@ -178,7 +178,14 @@ export async function extractLeadsFromText(rawText: string): Promise<ExtractedLe
       • Email: "Contact Email", "Email Address", "Owner Email", "E-mail"
       • State: "ST", "State", "Location", "Territory"
       • Industry: "Industry", "SIC", "Business Type", "Sector", "Vertical", "Category"
-      • Contact: "Owner", "Principal", "Agent", "Rep", "Contact Name", "First Name + Last Name"
+      • Contact: "Owner", "Principal", "Agent", "Rep", "Contact Name", "Full Name", "Manager", "Person"
+      • First Name: "First Name", "First", "FName", "Given Name"
+      • Last Name: "Last Name", "Last", "LName", "Surname", "Family Name"
+
+      CRITICAL — NAME MERGING:
+      • If the data has SEPARATE "First Name" and "Last Name" columns, you MUST combine them into a single contactName: "John" + "Smith" → "John Smith"
+      • Always return the COMPLETE full name (first + last). Never return just a first name if a last name exists.
+      • If only a first name is found, still include it — a partial name is better than "Unknown"
 
       REVENUE NORMALIZATION RULES:
       • "15K/mo" or "$15,000/month" → multiply by 12 → 180000
@@ -201,7 +208,7 @@ export async function extractLeadsFromText(rawText: string): Promise<ExtractedLe
       - revenue (number): ANNUAL revenue in USD (apply monthly→annual conversion)
       - state (string): US State code (NY, CA, FL). Infer from area code or address if not explicit. "Unknown" if can't determine.
       - industry (string): business type/industry. "Unknown" if not found.
-      - contactName (string): owner or contact person name. "Unknown" if not found.
+      - contactName (string): FULL name of the owner or contact person (first AND last name). If data has separate first/last columns, merge them. "Unknown" ONLY if no name data exists at all.
       - quality (string): "complete", "partial", or "minimal"
 
       RAW TEXT TO PARSE:
@@ -361,6 +368,7 @@ export async function processSmartImport(rawText: string): Promise<SmartImportRe
             businessName: (l.businessName || '').trim(),
             email: (l.email || '').trim().toLowerCase(),
             phone: (l.phone || '').trim(),
+            contactName: (l.contactName || '').trim(),
             quality: l.quality || assessQuality(l),
         }));
 
@@ -584,13 +592,23 @@ Keep it under 80 words. Be direct about what you want to discuss and why it matt
     };
 
     const toneGuides: Record<string, string> = {
-        Hot: `TONE: Confident, warm, and direct. Score: ${score || '80+'}/100. They're engaged — be assertive but genuine. Propose a specific next step.`,
-        Warm: `TONE: Professional and consultative. Score: ${score || '50-77'}/100. Build trust with relevant value. Soft CTA.`,
-        Lukewarm: `TONE: Curious and helpful. Score: ${score || '28-49'}/100. Ask a question, offer an insight. Zero pressure.`,
-        Cold: `TONE: Gentle, value-first. Score: ${score || '<28'}/100. Share something useful. NO product pitch, NO CTA beyond "thought you'd find this interesting."`,
+        Hot: `TONE: Confident, warm, and direct. Score: ${score || '80+'}/100.
+They're engaged — be assertive but genuine. Propose a specific next step (call, demo, or meeting).
+Use their first name. Write as if you've already had a positive interaction. Match urgency to their engagement.`,
+        Warm: `TONE: Professional and consultative. Score: ${score || '50-77'}/100.
+Build trust by leading with relevant value specific to their ${industry || 'field'}. Soft CTA — suggest a conversation, not a commitment.
+Be helpful first, salesy never.`,
+        Lukewarm: `TONE: Curious and helpful. Score: ${score || '28-49'}/100.
+Ask a thoughtful question about their business or share one useful insight. Zero pressure.
+Goal: earn a reply, not a meeting. Keep it SHORT.`,
+        Cold: `TONE: Gentle, value-first. Score: ${score || '<28'}/100.
+Share something genuinely useful — a relevant insight, stat, or trend in ${industry || 'their market'}.
+NO product pitch. NO CTA beyond "thought you'd find this interesting." Let curiosity do the work.`,
     };
 
     try {
+        const isUnknown = !contactName || businessName.toLowerCase().includes('unknown');
+
         const prompt = `You are a top-performing B2B sales writer who sounds like a real human, not a bot.
 
 CLIENT:
@@ -599,23 +617,40 @@ CLIENT:
 - Industry: ${industry || 'General'}
 - Revenue: ${revenue ? '$' + revenue.toLocaleString() : 'Unknown'}
 - Score: ${score || 'N/A'}/100 | Temperature: ${temp}
-- Pipeline: ${pipelineStage || 'New'}
+- Pipeline Stage: ${pipelineStage || 'New'}
 
 ${purposeInstructions[emailPurpose]}
 
 ${toneGuides[temp]}
 
+TONE × PURPOSE CROSS-MATCH:
+The tone controls HOW assertive you are. The purpose controls WHAT you're writing about.
+- Hot + Meeting = assertive meeting request with confident language
+- Cold + Re-Engage = gentle check-in, zero pressure, share value
+- Hot + Re-Engage = confident check-in, propose reconnecting with energy
+- Cold + Outreach = share a useful insight only, no ask
+Always blend BOTH the tone intensity AND the purpose structure.
+
+PIPELINE CONTEXT:
+- Stage "${pipelineStage || 'New'}" means: ${pipelineStage === 'Engagement' ? 'they know who you are — reference prior touchpoints' : pipelineStage === 'Proposal' ? 'they are evaluating — be specific about value' : pipelineStage === 'Negotiation' ? 'they are close to buying — be decisive and clear' : pipelineStage === 'Closed' ? 'they are a client — be warm and relationship-focused' : 'this is a new lead — make a strong first impression'}
+
+${isUnknown ? `IMPORTANT: The contact name or company is generic/unknown. Do NOT pretend to know them or their work. Instead:
+- Use "Hi there" as greeting
+- Focus on the industry (${industry || 'their field'}) rather than company-specific details
+- Keep it shorter than usual — you have less context to work with
+` : ''}
 WRITING RULES:
 1. Under 120 words — every word must earn its place
 2. Sound like a real person writing to ONE person — conversational, not corporate
-3. NO clichés: no "hope this finds you well", no "I wanted to reach out", no "leverage", no "synergy"
+3. NO clichés: no "hope this finds you well", no "I wanted to reach out", no "leverage", no "synergy", no "game-changer", no "touching base", no "circle back"
 4. Subject line must be specific and intriguing — would YOU open this email?
 5. Reference their actual industry (${industry || 'their field'}) or business context naturally
 6. One clear CTA max (or none for Cold tone)
-7. Sign off: "Best,\\n[Your Name]"
+7. Sign off with: "Best,\\n[Your Name]"
+8. The body MUST feel different for each tone — Hot emails are 2-3× more assertive than Cold ones
 
 Return ONLY raw JSON:
-{"subject": "string", "body": "string", "tone": "${temp}", "purpose": "${emailPurpose}"}`;
+{"subject": "string", "body": "string", "tone": "${temp}", "purpose": "${emailPurpose}"}`.trim();
 
         const text = await callGemini(prompt, 800);
         return safeJsonParse<EmailDraftResult>(text);
