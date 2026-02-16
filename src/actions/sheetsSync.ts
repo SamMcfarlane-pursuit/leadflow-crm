@@ -7,10 +7,64 @@ import { revalidatePath } from 'next/cache';
 const SHEET_ID = process.env.GOOGLE_SHEET_ID || '1_box_uFrWDKRLhpRO3Gt789T1XajdzIa3sNqb_Ws4kQ';
 const SHEET_NAME = process.env.GOOGLE_SHEET_NAME || 'Sheet1';
 
-// Google Sheets public CSV export endpoint 
-function getSheetCSVUrl(): string {
-    return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
+// Three different Google Sheets CSV export strategies (tried in order)
+function getSheetURLs(sheetId: string = SHEET_ID): string[] {
+    return [
+        // Strategy 1: gviz endpoint (most common)
+        `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`,
+        // Strategy 2: direct export endpoint (follows 307 redirect)
+        `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`,
+        // Strategy 3: published web endpoint (if sheet is "Published to the web")
+        `https://docs.google.com/spreadsheets/d/${sheetId}/pub?output=csv&gid=0`,
+    ];
 }
+
+// Try each URL strategy until one returns valid CSV
+async function fetchSheetCSV(sheetId?: string): Promise<{ csv: string | null; error: string | null }> {
+    const urls = getSheetURLs(sheetId);
+    const errors: string[] = [];
+
+    for (const url of urls) {
+        try {
+            const response = await fetch(url, {
+                next: { revalidate: 0 },
+                headers: { 'User-Agent': 'LeadFlow-CRM/1.0' },
+                redirect: 'follow',
+            });
+
+            if (!response.ok) {
+                errors.push(`${response.status} ${response.statusText}`);
+                continue; // try next URL
+            }
+
+            const text = await response.text();
+
+            // Google returns HTML login page if sheet isn't accessible
+            if (text.trimStart().startsWith('<!DOCTYPE') || text.trimStart().startsWith('<html')) {
+                errors.push('received login page (sheet not publicly shared)');
+                continue; // try next URL
+            }
+
+            // Verify it looks like CSV (has commas or quoted values)
+            if (text.trim().length === 0) {
+                errors.push('empty response');
+                continue;
+            }
+
+            return { csv: text, error: null };
+        } catch (err) {
+            errors.push(err instanceof Error ? err.message : 'network error');
+            continue;
+        }
+    }
+
+    // All strategies failed
+    return {
+        csv: null,
+        error: `All access methods failed. Make sure the sheet is shared as "Anyone with the link → Viewer". Details: ${errors.join('; ')}`,
+    };
+}
+
 
 // ─── CSV PARSER ──────────────────────────────────────────────────────
 function parseCSVLine(line: string): string[] {
@@ -199,40 +253,20 @@ export async function syncFromGoogleSheets(
     const syncedAt = new Date().toISOString();
 
     try {
-        const url = getSheetCSVUrl();
-        const response = await fetch(url, {
-            next: { revalidate: 0 }, // always fresh
-            headers: {
-                'User-Agent': 'LeadFlow-CRM/1.0',
-            },
-        });
+        // Use resilient multi-strategy fetch
+        const { csv: csvText, error: fetchError } = await fetchSheetCSV();
 
-        if (!response.ok) {
+        if (!csvText || fetchError) {
             return {
                 success: false,
                 totalRows: 0,
                 imported: 0,
                 skipped: 0,
-                error: response.status === 401
-                    ? 'Sheet is not publicly shared. Open Google Sheets → Share → "Anyone with the link" → Viewer.'
-                    : `Failed to fetch sheet: ${response.status} ${response.statusText}`,
+                error: fetchError || 'Failed to fetch sheet data',
                 syncedAt,
             };
         }
 
-        const csvText = await response.text();
-
-        // Google returns an HTML login page if the sheet isn't public
-        if (csvText.trimStart().startsWith('<!DOCTYPE') || csvText.trimStart().startsWith('<html')) {
-            return {
-                success: false,
-                totalRows: 0,
-                imported: 0,
-                skipped: 0,
-                error: 'Sheet is not publicly shared. Open Google Sheets → Share → "Anyone with the link" → Viewer.',
-                syncedAt,
-            };
-        }
         const rows = parseCSV(csvText);
 
         if (rows.length < 2) {
@@ -309,16 +343,21 @@ export async function syncFromGoogleSheets(
 }
 
 // ─── SYNC STATUS CHECK ──────────────────────────────────────────────
-export async function checkSheetAccess(): Promise<{ accessible: boolean; rowCount: number }> {
+export async function checkSheetAccess(sheetId?: string): Promise<{ accessible: boolean; rowCount: number; error?: string }> {
     try {
-        const url = getSheetCSVUrl();
-        const response = await fetch(url, { next: { revalidate: 0 } });
-        if (!response.ok) return { accessible: false, rowCount: 0 };
+        const { csv, error } = await fetchSheetCSV(sheetId);
+        if (!csv || error) {
+            return { accessible: false, rowCount: 0, error: error || 'Cannot access sheet' };
+        }
 
-        const text = await response.text();
-        const lines = text.split('\n').filter(l => l.trim());
+        const lines = csv.split('\n').filter(l => l.trim());
         return { accessible: true, rowCount: Math.max(0, lines.length - 1) };
     } catch {
-        return { accessible: false, rowCount: 0 };
+        return { accessible: false, rowCount: 0, error: 'Network error' };
     }
+}
+
+// ─── GET CURRENT SHEET ID (for display in Settings) ─────────────────
+export async function getConfiguredSheetId(): Promise<string> {
+    return SHEET_ID;
 }
