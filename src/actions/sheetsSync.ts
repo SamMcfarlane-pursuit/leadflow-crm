@@ -213,12 +213,26 @@ export async function syncFromGoogleSheets(
                 totalRows: 0,
                 imported: 0,
                 skipped: 0,
-                error: `Failed to fetch sheet: ${response.status} ${response.statusText}`,
+                error: response.status === 401
+                    ? 'Sheet is not publicly shared. Open Google Sheets → Share → "Anyone with the link" → Viewer.'
+                    : `Failed to fetch sheet: ${response.status} ${response.statusText}`,
                 syncedAt,
             };
         }
 
         const csvText = await response.text();
+
+        // Google returns an HTML login page if the sheet isn't public
+        if (csvText.trimStart().startsWith('<!DOCTYPE') || csvText.trimStart().startsWith('<html')) {
+            return {
+                success: false,
+                totalRows: 0,
+                imported: 0,
+                skipped: 0,
+                error: 'Sheet is not publicly shared. Open Google Sheets → Share → "Anyone with the link" → Viewer.',
+                syncedAt,
+            };
+        }
         const rows = parseCSV(csvText);
 
         if (rows.length < 2) {

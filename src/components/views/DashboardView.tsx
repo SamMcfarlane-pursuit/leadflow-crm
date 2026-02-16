@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useLeads } from '@/context/LeadContext';
 import { useModal } from '@/context/ModalContext';
-import { Plus, Bell, Sparkles, RefreshCw, CloudDownload } from 'lucide-react';
+import { Plus, Bell, Sparkles, RefreshCw, CloudDownload, CheckCircle2, AlertTriangle, X } from 'lucide-react';
+import { SyncResult } from '@/actions/sheetsSync';
 import AnalyticsDashboard from '@/components/AnalyticsDashboard';
 import RecentLeads from '@/components/RecentLeads';
 import LeadIntelligenceModal from '@/components/LeadIntelligenceModal';
@@ -15,6 +16,21 @@ export default function DashboardView() {
     const { openAddLead } = useModal();
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
     const [analyzingLead, setAnalyzingLead] = useState<Lead | null>(null);
+    const [syncNotice, setSyncNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+    const handleSync = useCallback(async () => {
+        setSyncNotice(null);
+        const result = await syncSheets(500);
+        if (result) {
+            if (result.success) {
+                setSyncNotice({ type: 'success', message: `Synced ${result.imported} leads from Google Sheets (${result.skipped} skipped)` });
+            } else {
+                setSyncNotice({ type: 'error', message: result.error || 'Sync failed — unknown error' });
+            }
+            // Auto-dismiss after 8s
+            setTimeout(() => setSyncNotice(null), 8000);
+        }
+    }, [syncSheets]);
 
     const handleAnalyze = (lead: Lead) => {
         setAnalyzingLead(lead);
@@ -62,7 +78,7 @@ export default function DashboardView() {
 
                     {/* Sheets Sync Button */}
                     <button
-                        onClick={() => syncSheets(500)}
+                        onClick={handleSync}
                         disabled={isSyncing}
                         className="flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium transition-all disabled:opacity-50"
                         style={{
@@ -102,6 +118,27 @@ export default function DashboardView() {
                     </button>
                 </div>
             </header>
+
+            {/* SYNC NOTIFICATION BANNER */}
+            {syncNotice && (
+                <div
+                    className="mx-4 md:mx-8 mt-3 px-4 py-3 rounded-xl flex items-center gap-3 text-sm font-medium animate-in slide-in-from-top-2"
+                    style={{
+                        backgroundColor: syncNotice.type === 'success' ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
+                        border: `1px solid ${syncNotice.type === 'success' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
+                        color: syncNotice.type === 'success' ? '#15803d' : '#b91c1c',
+                    }}
+                >
+                    {syncNotice.type === 'success'
+                        ? <CheckCircle2 size={16} className="flex-shrink-0" />
+                        : <AlertTriangle size={16} className="flex-shrink-0" />
+                    }
+                    <span className="flex-1">{syncNotice.message}</span>
+                    <button onClick={() => setSyncNotice(null)} className="p-0.5 rounded hover:bg-black/5 transition-colors">
+                        <X size={14} />
+                    </button>
+                </div>
+            )}
 
             {/* CONTENT */}
             <div className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-hide">
