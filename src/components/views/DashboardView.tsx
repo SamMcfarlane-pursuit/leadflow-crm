@@ -12,7 +12,7 @@ import { SessionReplayModal } from '@/components/Placeholders';
 import { Lead } from '@/types';
 
 export default function DashboardView() {
-    const { leads, stats, addLead, addLog, syncSheets, isSyncing, lastSyncTime } = useLeads();
+    const { leads, stats, totalLeads, addLead, addLog, syncSheets, isSyncing, lastSyncTime } = useLeads();
     const { openAddLead } = useModal();
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
     const [analyzingLead, setAnalyzingLead] = useState<Lead | null>(null);
@@ -145,7 +145,7 @@ export default function DashboardView() {
                 <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
                     {/* ANALYTICS DASHBOARD */}
                     <section>
-                        <AnalyticsDashboard leads={leads} />
+                        <AnalyticsDashboard leads={leads} totalLeads={totalLeads} stats={stats} />
                     </section>
 
                     {/* RECENT LEADS */}

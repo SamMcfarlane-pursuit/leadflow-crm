@@ -5,6 +5,8 @@ import { BarChart3, TrendingUp, Users, DollarSign, Target } from 'lucide-react';
 
 interface MetricsProps {
     leads: Lead[];
+    totalLeads?: number;
+    stats?: { total: number; hot: number; warm: number; cold: number; lukewarm: number; avgScore: number; totalRevenue: number } | null;
 }
 
 // ─── Compact number formatting helper ─────────────────────────
@@ -21,7 +23,7 @@ function formatAxisValue(value: number): string {
     return `$${value}`;
 }
 
-const AnalyticsDashboard: React.FC<MetricsProps> = ({ leads }) => {
+const AnalyticsDashboard: React.FC<MetricsProps> = ({ leads, totalLeads, stats: globalStats }) => {
     // Revenue chart data
     const revenueData = leads
         .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
@@ -61,14 +63,14 @@ const AnalyticsDashboard: React.FC<MetricsProps> = ({ leads }) => {
         },
         {
             label: 'High Value',
-            value: String(whales),
+            value: String(globalStats ? globalStats.hot : whales),
             icon: <Target size={20} />,
             accent: 'accent-rose',
             iconBg: 'bg-rose-50 text-rose-600',
         },
         {
             label: 'Total Leads',
-            value: String(leads.length),
+            value: String(totalLeads ?? leads.length),
             icon: <Users size={20} />,
             accent: 'accent-violet',
             iconBg: 'bg-violet-50 text-violet-600',
@@ -131,7 +133,7 @@ const AnalyticsDashboard: React.FC<MetricsProps> = ({ leads }) => {
                         </div>
                         <div>
                             <p className="text-[10px] text-slate-400 uppercase tracking-wider">Leads</p>
-                            <p className="text-lg font-bold text-slate-800">{leads.length}</p>
+                            <p className="text-lg font-bold text-slate-800">{totalLeads ?? leads.length}</p>
                         </div>
                     </div>
                     <div className="h-[240px] w-full">
@@ -257,7 +259,7 @@ const AnalyticsDashboard: React.FC<MetricsProps> = ({ leads }) => {
                                 </ResponsiveContainer>
                                 {/* Center Label */}
                                 <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-                                    <p className="text-2xl font-bold text-slate-800">{leads.length}</p>
+                                    <p className="text-2xl font-bold text-slate-800">{totalLeads ?? leads.length}</p>
                                     <p className="text-[10px] text-slate-400 uppercase tracking-wider">Total</p>
                                 </div>
                                 {/* Legend */}
