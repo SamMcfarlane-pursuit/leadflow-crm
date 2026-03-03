@@ -1,6 +1,10 @@
 "use server";
+import { auth } from '@clerk/nextjs/server';
 
 export async function sendEmail(to: string, subject: string, body: string) {
+    const { userId } = await auth();
+    if (!userId) throw new Error('Unauthorized');
+
     const BREVO_KEY = process.env.BREVO_API_KEY;
     const SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL || 'noreply@leadflow.app';
     const SENDER_NAME = process.env.BREVO_SENDER_NAME || 'LeadFlow CRM';

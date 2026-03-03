@@ -1,6 +1,7 @@
 "use server";
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { auth } from '@clerk/nextjs/server';
 
 // Initialize Gemini API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
@@ -67,6 +68,8 @@ export type AIAnalysisResult = {
 };
 
 export async function generateLeadScore(businessName: string, revenue: number, industry?: string): Promise<AIAnalysisResult | null> {
+    const { userId } = await auth();
+    if (!userId) throw new Error('Unauthorized');
     if (!process.env.GEMINI_API_KEY) {
         console.warn("GEMINI_API_KEY is not set. Using heuristic scoring.");
         const score = revenue >= 500000 ? 85 : revenue >= 100000 ? 62 : revenue > 0 ? 38 : 20;
@@ -140,6 +143,8 @@ export type ExtractedLead = {
 };
 
 export async function extractLeadsFromText(rawText: string): Promise<ExtractedLead[] | null> {
+    const { userId } = await auth();
+    if (!userId) throw new Error('Unauthorized');
     if (!process.env.GEMINI_API_KEY) {
         console.warn("GEMINI_API_KEY is not set.");
         return null;
@@ -248,6 +253,8 @@ function isUrl(text: string): boolean {
 }
 
 export async function scrapeUrlContent(url: string): Promise<{ text: string; title: string } | null> {
+    const { userId } = await auth();
+    if (!userId) throw new Error('Unauthorized');
     try {
         const cleanUrl = url.trim();
         if (!isUrl(cleanUrl)) return null;
@@ -350,6 +357,8 @@ export type SmartImportResult = {
 };
 
 export async function processSmartImport(rawText: string): Promise<SmartImportResult> {
+    const { userId } = await auth();
+    if (!userId) throw new Error('Unauthorized');
     const contentType = detectContentType(rawText);
     const warnings: string[] = [];
 
@@ -442,6 +451,8 @@ export async function generateDeepAnalysis(
     pipelineStage?: string,
     state?: string,
 ): Promise<DeepAnalysisResult | null> {
+    const { userId } = await auth();
+    if (!userId) throw new Error('Unauthorized');
     const ind = industry || 'General Services';
     const revStr = revenue ? '$' + revenue.toLocaleString() : 'Unknown';
     const revenueContext = revenue
@@ -549,6 +560,8 @@ export async function generateEmailDraft(
     purpose?: EmailPurpose,
     pipelineStage?: string,
 ): Promise<EmailDraftResult | null> {
+    const { userId } = await auth();
+    if (!userId) throw new Error('Unauthorized');
     const name = contactName || 'there';
     const firstName = contactName ? contactName.split(' ')[0] : 'there';
     const temp = temperature || 'Warm';
