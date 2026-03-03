@@ -172,3 +172,14 @@
 .glow-badge {
   box-shadow: 0 0 12px -2px currentColor;
 }
+
+/* ─── Clerk Component Overrides ──────────────────────────────── */
+/* Hide Clerk's default footer (duplicate links + development badge) */
+.cl-footer,
+.cl-footerAction,
+.cl-internal-b3fm6y,
+[data-localization-key="footerActionLink__signUp"],
+[data-localization-key="footerActionLink__signIn"],
+.cl-internal-yljrql {
+  display: none !important;
+}
