@@ -94,7 +94,7 @@ export default function Page() {
                                     socialButtonsBlockButton: "border border-slate-200 hover:bg-slate-50 rounded-xl transition-all",
                                     formButtonPrimary: "rounded-xl font-semibold shadow-none",
                                     formFieldInput: "rounded-xl border-slate-200 focus:ring-2 focus:ring-amber-500/30 focus:border-amber-400",
-                                    footerActionLink: "text-amber-600 hover:text-amber-700 font-semibold",
+                                    footer: "hidden",
                                     identityPreviewEditButton: "text-amber-600",
                                 },
                                 variables: {
@@ -107,12 +107,15 @@ export default function Page() {
                     </div>
 
                     {/* Bottom Links */}
-                    <div className="text-center space-y-3 pt-2">
+                    <div className="text-center space-y-3 pt-4">
                         <p className="text-sm" style={{ color: '#8a7a6a' }}>
                             Don&apos;t have an account?{' '}
                             <Link href="/sign-up" className="font-semibold hover:underline" style={{ color: '#e09f36' }}>
                                 Create one free
                             </Link>
+                        </p>
+                        <p className="text-[11px]" style={{ color: '#b8a898' }}>
+                            Secured by Clerk · Enterprise-grade authentication
                         </p>
                     </div>
                 </div>
