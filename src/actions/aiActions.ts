@@ -19,6 +19,7 @@ async function callGemini(prompt: string, maxTokens = 1024): Promise<string> {
                     temperature: 0.7,
                     maxOutputTokens: maxTokens,
                     topP: 0.9,
+                    responseMimeType: "application/json",
                 },
             });
             const result = await model.generateContent(prompt);
@@ -34,14 +35,18 @@ async function callGemini(prompt: string, maxTokens = 1024): Promise<string> {
 }
 
 // ─── Robust JSON extraction from AI text ──────────────────────────────
-function safeJsonParse<T>(text: string): T {
-    // Step 1: Strip markdown code fences
-    let cleaned = text.replace(/```(?:json)?\n?/g, '').trim();
+export function safeJsonParse<T>(text: string): T {
+    console.log("--- RAW AI RESPONSE ---");
+    console.log(text);
+    console.log("-----------------------");
+    // Step 1: Strip markdown code fences (matches ```json, ```, etc)
+    let cleaned = text.replace(/```(?:json)?\n?/gi, '').replace(/```\n?/g, '').trim();
 
-    // Step 2: Try direct parse
+    // Step 2: Try direct parse first
     try { return JSON.parse(cleaned) as T; } catch { /* proceed to fallback */ }
 
     // Step 3: Extract first JSON array or object via bracket matching
+    // Some AI responses include conversational text before/after the JSON
     const startIdx = cleaned.search(/[\[{]/);
     if (startIdx === -1) throw new Error('No JSON found in AI response');
 
@@ -49,12 +54,19 @@ function safeJsonParse<T>(text: string): T {
     const closeChar = openChar === '[' ? ']' : '}';
     let depth = 0;
     let endIdx = -1;
+
+    // Scan carefully for the matching closing bracket
     for (let i = startIdx; i < cleaned.length; i++) {
         if (cleaned[i] === openChar) depth++;
         else if (cleaned[i] === closeChar) depth--;
-        if (depth === 0) { endIdx = i; break; }
+
+        if (depth === 0) {
+            endIdx = i;
+            break;
+        }
     }
-    if (endIdx === -1) throw new Error('Malformed JSON in AI response');
+
+    if (endIdx === -1) throw new Error('Malformed JSON in AI response (unbalanced brackets)');
 
     const jsonStr = cleaned.slice(startIdx, endIdx + 1);
     return JSON.parse(jsonStr) as T;
@@ -662,8 +674,12 @@ WRITING RULES:
 7. Sign off with: "Best,\\n[Your Name]"
 8. The body MUST feel different for each tone — Hot emails are 2-3× more assertive than Cold ones
 
-Return ONLY raw JSON:
-{"subject": "string", "body": "string", "tone": "${temp}", "purpose": "${emailPurpose}"}`.trim();
+{
+  "subject": "string",
+  "body": "string",
+  "tone": "${temp}",
+  "purpose": "${emailPurpose}"
+}`.trim();
 
         const text = await callGemini(prompt, 800);
         return safeJsonParse<EmailDraftResult>(text);
