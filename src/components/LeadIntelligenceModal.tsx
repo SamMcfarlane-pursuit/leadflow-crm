@@ -155,9 +155,21 @@ const LeadIntelligenceModal: React.FC<LeadIntelligenceModalProps> = ({ lead, onC
                             </div>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-400 hover:text-white">
-                        <X size={20} />
-                    </button>
+                    <div className="flex items-center gap-1">
+                        {lead.phone && lead.phone !== 'unknown' && lead.phone !== '555-000-0000' && (
+                            <>
+                                <a href={`tel:${lead.phone}`} className="p-2 hover:bg-blue-500/20 text-slate-300 hover:text-blue-400 rounded-full transition-colors" title="Call">
+                                    <Phone size={18} />
+                                </a>
+                                <a href={`sms:${lead.phone}`} className="p-2 hover:bg-violet-500/20 text-slate-300 hover:text-violet-400 rounded-full transition-colors" title="Message">
+                                    <MessageSquare size={18} />
+                                </a>
+                            </>
+                        )}
+                        <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-400 hover:text-white ml-2" title="Close">
+                            <X size={20} />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Title bar */}

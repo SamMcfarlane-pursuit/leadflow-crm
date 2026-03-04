@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Lead } from '../types';
-import { Phone, Mail, Ban, CheckCircle2, Search, ChevronLeft, ChevronRight, Loader2, Download } from 'lucide-react';
+import { Phone, Mail, Ban, CheckCircle2, Search, ChevronLeft, ChevronRight, Loader2, Download, MessageSquare, Sparkles } from 'lucide-react';
 import { useLeads } from '@/context/LeadContext';
 
 interface RecentLeadsProps {
@@ -252,6 +252,12 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ onViewSession, onAnalyze }) =
                                         {/* Actions */}
                                         <td className="px-2 py-2.5 text-right">
                                             <div className="flex items-center justify-end gap-1">
+                                                <a href={`tel:${lead.phone}`} className="inline-flex items-center px-1.5 py-1.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-all" title="Call Lead">
+                                                    <Phone size={10} />
+                                                </a>
+                                                <a href={`sms:${lead.phone}`} className="inline-flex items-center px-1.5 py-1.5 rounded-md bg-violet-50 text-violet-700 border border-violet-200 hover:bg-violet-100 transition-all" title="Message Lead">
+                                                    <MessageSquare size={10} />
+                                                </a>
                                                 <button
                                                     onClick={() => onAnalyze(lead)}
                                                     className="inline-flex items-center gap-1 px-2 py-1.5 text-[10px] font-semibold rounded-md bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-all"
@@ -262,7 +268,7 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ onViewSession, onAnalyze }) =
                                                     onClick={() => onViewSession(lead)}
                                                     className="inline-flex items-center px-1.5 py-1.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-all"
                                                     title="View Session">
-                                                    <Phone size={10} />
+                                                    <Sparkles size={10} />
                                                 </button>
                                             </div>
                                         </td>
@@ -322,12 +328,18 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ onViewSession, onAnalyze }) =
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex gap-2 border-t border-slate-200/60 pt-3">
-                                    <button onClick={() => onAnalyze(lead)} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700 font-semibold active:scale-95 transition-transform">
+                                <div className="flex gap-1.5 border-t border-slate-200/60 pt-3">
+                                    <a href={`tel:${lead.phone}`} className="w-10 flex items-center justify-center bg-blue-50 border border-blue-200 rounded-xl text-blue-700 active:scale-95 transition-transform" title="Call">
+                                        <Phone size={13} />
+                                    </a>
+                                    <a href={`sms:${lead.phone}`} className="w-10 flex items-center justify-center bg-violet-50 border border-violet-200 rounded-xl text-violet-700 active:scale-95 transition-transform" title="Message">
+                                        <MessageSquare size={13} />
+                                    </a>
+                                    <button onClick={() => onAnalyze(lead)} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700 font-semibold active:scale-95 transition-transform">
                                         <Mail size={13} /> Email
                                     </button>
-                                    <button onClick={() => onViewSession(lead)} className="w-12 flex items-center justify-center bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 active:scale-95 transition-transform">
-                                        <Phone size={13} />
+                                    <button onClick={() => onViewSession(lead)} className="w-10 flex items-center justify-center bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 active:scale-95 transition-transform" title="Intel">
+                                        <Sparkles size={13} />
                                     </button>
                                 </div>
                             </div>

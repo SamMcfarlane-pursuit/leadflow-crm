@@ -1,7 +1,7 @@
 import React from 'react';
 import { Lead, PipelineStage } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GripVertical, CheckCircle2, DollarSign, Activity, Inbox, MessageSquare, FileText, Handshake, Trophy } from 'lucide-react';
+import { GripVertical, CheckCircle2, DollarSign, Activity, Inbox, MessageSquare, FileText, Handshake, Trophy, Phone } from 'lucide-react';
 
 interface KanbanBoardProps {
     leads: Lead[];
@@ -111,7 +111,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ leads, onStageChange }
                                             </span>
                                         </div>
 
-                                        <div className="flex items-center justify-between pt-2.5 border-t border-slate-100">
+                                        <div className="flex items-center justify-between pt-2.5 border-t border-slate-100 mt-1">
                                             <div className="flex items-center gap-1 text-slate-600 font-semibold text-xs">
                                                 <DollarSign size={12} className="text-slate-400" />
                                                 {lead.revenue >= 1_000_000
@@ -119,9 +119,21 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ leads, onStageChange }
                                                     : `${(lead.revenue / 1_000).toFixed(0)}K`
                                                 }
                                             </div>
-                                            {lead.dncStatus === 'SAFE' && (
-                                                <CheckCircle2 size={14} className="text-emerald-500" />
-                                            )}
+                                            <div className="flex items-center gap-1">
+                                                {lead.phone && lead.phone !== 'unknown' && lead.phone !== '555-000-0000' && (
+                                                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <a href={`tel:${lead.phone}`} onClick={e => e.stopPropagation()} className="p-1.5 hover:bg-blue-50 text-slate-300 hover:text-blue-500 rounded flex items-center justify-center transition-colors" title="Call">
+                                                            <Phone size={12} />
+                                                        </a>
+                                                        <a href={`sms:${lead.phone}`} onClick={e => e.stopPropagation()} className="p-1.5 hover:bg-violet-50 text-slate-300 hover:text-violet-500 rounded flex items-center justify-center transition-colors mb-[1px]" title="Message">
+                                                            <MessageSquare size={12} />
+                                                        </a>
+                                                    </div>
+                                                )}
+                                                {lead.dncStatus === 'SAFE' && (
+                                                    <CheckCircle2 size={14} className="text-emerald-400 ml-1" />
+                                                )}
+                                            </div>
                                         </div>
                                     </motion.div>
                                 ))}
