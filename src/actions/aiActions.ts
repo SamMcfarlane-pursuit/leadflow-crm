@@ -35,10 +35,7 @@ async function callGemini(prompt: string, maxTokens = 1024): Promise<string> {
 }
 
 // ─── Robust JSON extraction from AI text ──────────────────────────────
-export function safeJsonParse<T>(text: string): T {
-    console.log("--- RAW AI RESPONSE ---");
-    console.log(text);
-    console.log("-----------------------");
+export async function safeJsonParse<T>(text: string): Promise<T> {
     // Step 1: Strip markdown code fences (matches ```json, ```, etc)
     let cleaned = text.replace(/```(?:json)?\n?/gi, '').replace(/```\n?/g, '').trim();
 
@@ -125,7 +122,7 @@ export async function generateLeadScore(businessName: string, revenue: number, i
 
         const text = await callGemini(prompt);
 
-        return safeJsonParse<AIAnalysisResult>(text);
+        return await safeJsonParse<AIAnalysisResult>(text);
     } catch (error) {
         console.error("AI Generation Failed:", error);
         // Return heuristic fallback instead of null
@@ -240,7 +237,7 @@ export async function extractLeadsFromText(rawText: string): Promise<ExtractedLe
     `;
 
         const text = await callGemini(prompt);
-        const leads = safeJsonParse<ExtractedLead[]>(text);
+        const leads = await safeJsonParse<ExtractedLead[]>(text);
 
         // Validate: ensure result is an array
         if (!Array.isArray(leads)) {
@@ -545,7 +542,7 @@ Return ONLY raw JSON:
 }`;
 
         const text = await callGemini(prompt, 1200);
-        return safeJsonParse<DeepAnalysisResult>(text);
+        return await safeJsonParse<DeepAnalysisResult>(text);
     } catch (error) {
         console.error("Deep Analysis Failed:", error);
         return fallback;
@@ -682,7 +679,7 @@ WRITING RULES:
 }`.trim();
 
         const text = await callGemini(prompt, 800);
-        return safeJsonParse<EmailDraftResult>(text);
+        return await safeJsonParse<EmailDraftResult>(text);
     } catch (error) {
         console.error("Email Gen Failed:", error);
         return {
