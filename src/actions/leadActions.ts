@@ -17,9 +17,9 @@ async function requireAuth(): Promise<string> {
     return userId;
 }
 
-// Scopes queries to current user + unclaimed leads (migration compat)
+// Scopes queries to current user
 function userScope(userId: string): Prisma.LeadWhereInput {
-    return { OR: [{ userId }, { userId: null }] };
+    return { userId };
 }
 
 // ─── Input sanitization ──────────────────────────────────────────────

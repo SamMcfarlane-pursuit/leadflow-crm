@@ -14,7 +14,7 @@ datasource db {
 
 model Lead {
   id            String   @id @default(cuid())
-  userId        String?  // Clerk user ID — scopes data per user
+  userId        String   // Clerk user ID — scopes data per user
   email         String
   phone         String
   revenue       Float
