@@ -690,4 +690,119 @@ WRITING RULES:
         };
     }
 }
+// ─── SMS Draft ──────────────────────────────────────────────────────
+export type SMSDraftResult = {
+    message: string;
+    tone: string;
+    purpose: string;
+};
 
+export async function generateSMSDraft(
+    businessName: string,
+    contactName?: string,
+    industry?: string,
+    temperature?: 'Hot' | 'Warm' | 'Lukewarm' | 'Cold',
+    purpose?: EmailPurpose,
+): Promise<SMSDraftResult | null> {
+    const { userId } = await auth();
+    if (!userId) throw new Error('Unauthorized');
+    const firstName = contactName ? contactName.split(' ')[0] : 'there';
+    const temp = temperature || 'Warm';
+    const smsPurpose = purpose || 'outreach';
+
+    if (!process.env.GEMINI_API_KEY) {
+        return {
+            message: `Hi ${firstName}, this is [Your Name] from LeadFlow. Just wanted to connect regarding ${businessName}. Do you have a quick minute later today?`,
+            tone: temp,
+            purpose: smsPurpose,
+        };
+    }
+
+    try {
+        const prompt = `You are a professional B2B lead generation specialist writing a text message.
+        
+        CLIENT: ${businessName} | ${contactName || 'Owner'} | ${industry || 'General'}
+        TONE: ${temp}
+        PURPOSE: ${smsPurpose}
+
+        RULES:
+        1. UNDER 160 CHARACTERS.
+        2. Sounds like a real human (conversational, no jargon).
+        3. No "Hope you're having a good day".
+        4. Be direct but respectful.
+        5. Tone intensity: Hot = assertive, Warm = consultative, Cold = value-first.
+
+        {
+            "message": "string",
+            "tone": "${temp}",
+            "purpose": "${smsPurpose}"
+        }`;
+
+        const text = await callGemini(prompt, 200);
+        return await safeJsonParse<SMSDraftResult>(text);
+    } catch (error) {
+        console.error("SMS Gen Failed:", error);
+        return {
+            message: `Hi ${firstName}, this is [Your Name]. Checking in on ${businessName}. Let me know if you're open to chat.`,
+            tone: temp,
+            purpose: smsPurpose,
+        };
+    }
+}
+
+// ─── Call Script ────────────────────────────────────────────────────
+export type CallScriptResult = {
+    opener: string;
+    valueProp: string;
+    handling: string;
+    cta: string;
+};
+
+export async function generateCallScript(
+    businessName: string,
+    contactName?: string,
+    industry?: string,
+    temperature?: 'Hot' | 'Warm' | 'Lukewarm' | 'Cold',
+): Promise<CallScriptResult | null> {
+    const { userId } = await auth();
+    if (!userId) throw new Error('Unauthorized');
+    const firstName = contactName ? contactName.split(' ')[0] : 'there';
+    const temp = temperature || 'Warm';
+
+    if (!process.env.GEMINI_API_KEY) {
+        return {
+            opener: `Hi ${firstName}, this is [Your Name]. I'm calling about ${businessName}.`,
+            valueProp: `We've been helping ${industry || 'businesses like yours'} streamline their pipeline.`,
+            handling: `I understand you're busy, I'll be very brief.`,
+            cta: `Would you be open to a 10-minute chat on Tuesday?`,
+        };
+    }
+
+    try {
+        const prompt = `You are a high-ticket sales closer drafting a phone call script.
+        
+        CLIENT: ${businessName} | ${contactName || 'Owner'} | ${industry || 'General'}
+        TONE: ${temp}
+
+        Provide a structured script:
+        1. Opener (First 5 seconds)
+        2. Value Prop (The "Why now?")
+        3. Objection Handling (Common pushback)
+        4. Clear CTA (The "Close")
+
+        Keep it punchy. 2-3 sentences max per section.
+
+        {
+            "opener": "string",
+            "valueProp": "string",
+            "handling": "string",
+            "cta": "string"
+        }`;
+
+        const text = await callGemini(prompt, 600);
+        return await safeJsonParse<CallScriptResult>(text);
+    } catch (error) {
+        console.error("Call Script Gen Failed:", error);
+        return null;
+    }
+}

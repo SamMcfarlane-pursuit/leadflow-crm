@@ -6,7 +6,7 @@ const TARGET_USER_ID = 'user_39Q4gI5hwVhSDnun8zaatHQYRDK';
 async function backfill() {
   console.log(`Starting backfill for target user: ${TARGET_USER_ID}`);
   
-  const unassigned = await prisma.lead.count({ where: { userId: null } });
+  const unassigned = await prisma.lead.count({ where: { userId: null as any } });
   console.log(`Found ${unassigned} unassigned leads.`);
   
   if (unassigned === 0) {
@@ -15,13 +15,13 @@ async function backfill() {
   }
   
   const { count } = await prisma.lead.updateMany({
-    where: { userId: null },
+    where: { userId: null as any },
     data: { userId: TARGET_USER_ID }
   });
   
   console.log(`Successfully assigned ${count} leads to ${TARGET_USER_ID}.`);
   
-  const remaining = await prisma.lead.count({ where: { userId: null } });
+  const remaining = await prisma.lead.count({ where: { userId: null as any } });
   console.log(`Remaining unassigned leads: ${remaining}`);
 }
 

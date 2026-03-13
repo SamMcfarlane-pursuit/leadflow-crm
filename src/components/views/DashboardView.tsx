@@ -16,6 +16,7 @@ export default function DashboardView() {
     const { openAddLead } = useModal();
     const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
     const [analyzingLead, setAnalyzingLead] = useState<Lead | null>(null);
+    const [initialTab, setInitialTab] = useState<'email' | 'sms' | 'call'>('email');
     const [syncNotice, setSyncNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
     const handleSync = useCallback(async () => {
@@ -32,7 +33,8 @@ export default function DashboardView() {
         }
     }, [syncSheets]);
 
-    const handleAnalyze = (lead: Lead) => {
+    const handleAnalyze = (lead: Lead, tab?: 'email' | 'sms' | 'call') => {
+        setInitialTab(tab || 'email');
         setAnalyzingLead(lead);
     };
 
@@ -47,6 +49,7 @@ export default function DashboardView() {
             {analyzingLead && (
                 <LeadIntelligenceModal
                     lead={analyzingLead}
+                    initialTab={initialTab}
                     onClose={() => setAnalyzingLead(null)}
                 />
             )}
