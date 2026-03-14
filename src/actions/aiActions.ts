@@ -52,14 +52,36 @@ export async function safeJsonParse<T>(text: string): Promise<T> {
     let depth = 0;
     let endIdx = -1;
 
+    let insideString = false;
+    let escapeNext = false;
+
     // Scan carefully for the matching closing bracket
     for (let i = startIdx; i < cleaned.length; i++) {
-        if (cleaned[i] === openChar) depth++;
-        else if (cleaned[i] === closeChar) depth--;
+        const char = cleaned[i];
+        
+        if (escapeNext) {
+            escapeNext = false;
+            continue;
+        }
+        
+        if (char === '\\') {
+            escapeNext = true;
+            continue;
+        }
+        
+        if (char === '"') {
+            insideString = !insideString;
+            continue;
+        }
 
-        if (depth === 0) {
-            endIdx = i;
-            break;
+        if (!insideString) {
+            if (char === openChar) depth++;
+            else if (char === closeChar) depth--;
+
+            if (depth === 0) {
+                endIdx = i;
+                break;
+            }
         }
     }
 
@@ -732,6 +754,7 @@ export async function generateSMSDraft(
         4. Be direct but respectful.
         5. Tone intensity: Hot = assertive, Warm = consultative, Cold = value-first.
 
+        Return ONLY raw JSON with no markdown formatting:
         {
             "message": "string",
             "tone": "${temp}",
@@ -792,6 +815,7 @@ export async function generateCallScript(
 
         Keep it punchy. 2-3 sentences max per section.
 
+        Return ONLY raw JSON with no markdown formatting:
         {
             "opener": "string",
             "valueProp": "string",
@@ -803,6 +827,11 @@ export async function generateCallScript(
         return await safeJsonParse<CallScriptResult>(text);
     } catch (error) {
         console.error("Call Script Gen Failed:", error);
-        return null;
+        return {
+            opener: `Hi ${firstName}, this is [Your Name]. I'm calling about ${businessName}.`,
+            valueProp: `We've been helping ${industry || 'businesses like yours'} streamline their pipeline.`,
+            handling: `I understand you're busy, I'll be very brief.`,
+            cta: `Would you be open to a 10-minute chat on Tuesday?`,
+        };
     }
 }
