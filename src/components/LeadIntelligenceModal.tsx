@@ -103,7 +103,7 @@ const LeadIntelligenceModal: React.FC<LeadIntelligenceModalProps> = ({ lead, ini
             if (data) { setEmailData(data); setDraftCount(1); }
             setEmailLoading(false);
         }).catch(() => setEmailLoading(false));
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [lead, selectedTone, selectedPurpose]); 
 
     // Regenerate drafts based on active tab
     const handleRegenerateDraft = useCallback(async (tone?: ToneType, purpose?: EmailPurpose) => {
@@ -147,7 +147,7 @@ const LeadIntelligenceModal: React.FC<LeadIntelligenceModalProps> = ({ lead, ini
     useEffect(() => {
         if (activeTab === 'sms' && !smsData) handleRegenerateDraft();
         if (activeTab === 'call' && !callData) handleRegenerateDraft();
-    }, [activeTab]);
+    }, [activeTab, smsData, callData, handleRegenerateDraft]);
 
     const handleToneChange = (tone: ToneType) => { setSelectedTone(tone); handleRegenerateDraft(tone); };
     const handlePurposeChange = (purpose: EmailPurpose) => { setSelectedPurpose(purpose); handleRegenerateDraft(undefined, purpose); };
@@ -217,7 +217,7 @@ const LeadIntelligenceModal: React.FC<LeadIntelligenceModalProps> = ({ lead, ini
                     ].map(tab => (
                         <button
                             key={tab.id}
-                            onClick={() => setActiveTab(tab.id as any)}
+                            onClick={() => setActiveTab(tab.id as 'email' | 'sms' | 'call')}
                             className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-t-xl transition-all ${activeTab === tab.id
                                 ? 'bg-white text-slate-900'
                                 : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
@@ -425,7 +425,7 @@ const LeadIntelligenceModal: React.FC<LeadIntelligenceModalProps> = ({ lead, ini
                                             <div className="space-y-1.5">
                                                 <h5 className={`text-[10px] font-black uppercase tracking-widest text-${step.color}-500`}>{step.label}</h5>
                                                 <p className="text-sm text-slate-700 leading-relaxed font-medium bg-white border border-slate-100 p-3 rounded-xl shadow-sm italic peer-hover:border-blue-300 transition-all">
-                                                    "{step.text}"
+                                                    &quot;{step.text}&quot;
                                                 </p>
                                             </div>
                                         </div>

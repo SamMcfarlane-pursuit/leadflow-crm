@@ -1,5 +1,5 @@
 import React from 'react';
-import { ComposedChart, Bar, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { ComposedChart, Bar, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Lead } from '../types';
 import { BarChart3, TrendingUp, Users, DollarSign, Target } from 'lucide-react';
 
@@ -189,7 +189,7 @@ const AnalyticsDashboard: React.FC<MetricsProps> = ({ leads, totalLeads, stats: 
                                             fontSize: '11px',
                                             padding: '8px 12px',
                                         }}
-                                        formatter={(value: any, name?: string) => [
+                                        formatter={(value: number | undefined, name?: string) => [
                                             formatCompact(Number(value)),
                                             name === 'revenue' ? 'Deal Value' : 'Pipeline Total'
                                         ]}

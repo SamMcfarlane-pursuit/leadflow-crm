@@ -40,7 +40,7 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ onViewSession, onAnalyze }) =
             });
         }, 300);
         return () => clearTimeout(timer);
-    }, [searchInput, tempFilter, scoreFilter]);
+    }, [searchInput, tempFilter, scoreFilter, filters, setFilters]);
 
     const handleExport = () => {
         if (!leads.length) return;

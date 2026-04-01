@@ -71,7 +71,7 @@ export default function CampaignsView() {
                 sent: Math.min(leads.length, 25),
                 opened: Math.ceil(Math.min(leads.length, 25) * 0.62),
                 replied: Math.ceil(Math.min(leads.length, 25) * 0.12),
-                date: new Date(Date.now() - 7 * 86400000).toLocaleDateString()
+                date: new Date(new Date().getTime() - 7 * 86400000).toLocaleDateString()
             });
         }
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Building, Mail, Phone, BadgeDollarSign, Info, X, FileJson, Copy, Upload, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Trash2, Loader2, FileText, Sparkles, FileSpreadsheet, Filter, Shield, ShieldAlert, ShieldCheck, SlidersHorizontal } from 'lucide-react';
+import { Mail, X, FileJson, Copy, Upload, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Loader2, FileText, Sparkles, FileSpreadsheet, Shield, ShieldAlert, ShieldCheck, SlidersHorizontal } from 'lucide-react';
 import { processLeadSimulation, processBatch, calculateTier, COMPLIANCE_CONFIG } from '../utils/ironGateLogic';
 import { Lead, LogEntry } from '../types';
 import { generateLeadScore, processSmartImport, scrapeUrlContent } from '@/actions/aiActions';
@@ -378,7 +378,7 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ onLeadProcessed, addLog, on
     const handleMappingSubmit = () => {
         // Select all valid rows by default
         const allIndices = new Set<number>();
-        parsedRows.forEach((_, idx) => allIndices.add(idx));
+        parsedRows.forEach((_: string[], idx: number) => allIndices.add(idx));
         setSelectedRows(allIndices);
         setStep('review');
     };
@@ -388,9 +388,9 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ onLeadProcessed, addLog, on
         setImportProgress(null);
         try {
             const leadsToImport = parsedRows
-                .filter((_, idx) => selectedRows.has(idx))
-                .map(row => {
-                    const leadObj: any = {};
+                .filter((_: string[], idx: number) => selectedRows.has(idx))
+                .map((row: string[]) => {
+                    const leadObj: Partial<Lead> & Record<string, string | number | undefined> = {};
                     Object.entries(columnMapping).forEach(([colIdx, field]) => {
                         if (field !== 'ignore') {
                             leadObj[field] = row[parseInt(colIdx)];
@@ -427,21 +427,22 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ onLeadProcessed, addLog, on
                 setImportProgress({ done: 0, total: leadsToImport.length });
 
                 // Map to BulkLeadData format — use unified scoring
-                const bulkData = leadsToImport.map((l: any) => {
-                    const { tier, temperature, score } = calculateTier(l.revenue);
+                const bulkData = leadsToImport.map((l: Partial<Lead> & Record<string, any>) => {
+                    const rev = Number(l.revenue) || 0;
+                    const { tier, temperature, score } = calculateTier(rev);
                     return {
-                        email: l.email,
-                        phone: l.phone,
-                        revenue: l.revenue,
-                        businessName: l.businessName,
+                        email: String(l.email || "no-email@provided.com"),
+                        phone: String(l.phone || "555-000-0000"),
+                        revenue: rev,
+                        businessName: String(l.businessName || "Unknown Business"),
                         tier,
                         temperature,
                         score,
-                        dncStatus: 'SAFE',
-                        pipelineStage: 'New',
-                        state: l.state,
-                        industry: l.industry,
-                        contactName: l.contactName,
+                        dncStatus: 'SAFE' as const,
+                        pipelineStage: 'New' as const,
+                        state: l.state ? String(l.state) : undefined,
+                        industry: l.industry ? String(l.industry) : undefined,
+                        contactName: l.contactName ? String(l.contactName) : undefined,
                     };
                 });
 
@@ -458,7 +459,13 @@ const AddLeadModal: React.FC<AddLeadModalProps> = ({ onLeadProcessed, addLog, on
                 });
             } else {
                 // Small batch — use simulation path
-                const leads = processBatch(leadsToImport);
+                const leads = processBatch(leadsToImport.map(l => ({
+                    email: String(l.email || "no-email@provided.com"),
+                    phone: String(l.phone || "555-000-0000"),
+                    revenue: Number(l.revenue) || 0,
+                    businessName: String(l.businessName || "Unknown Business"),
+                    state: l.state ? String(l.state) : undefined
+                })));
                 onLeadProcessed(leads);
             }
 
@@ -730,7 +737,7 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                             <table className="w-full text-sm text-left">
                                                 <thead className="bg-slate-50 text-slate-600 font-medium">
                                                     <tr>
-                                                        {headers.map((h, i) => {
+                                                        {headers.map((h: string, i: number) => {
                                                             const conf = columnConfidences[i] || 0;
                                                             const mapped = columnMapping[i] && columnMapping[i] !== 'ignore';
                                                             const confColor = conf >= 80 ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
@@ -763,9 +770,9 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100">
-                                                    {parsedRows.slice(0, 5).map((row, rIdx) => (
+                                                    {parsedRows.slice(0, 5).map((row: string[], rIdx: number) => (
                                                         <tr key={rIdx}>
-                                                            {row.map((cell, cIdx) => (
+                                                            {row.map((cell: string, cIdx: number) => (
                                                                 <td key={cIdx} className="px-4 py-2 text-slate-600 font-mono text-xs truncate max-w-[150px]">{cell}</td>
                                                             ))}
                                                         </tr>
@@ -806,7 +813,7 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                                 </button>
                                                 <button onClick={() => {
                                                     const all = new Set<number>();
-                                                    parsedRows.forEach((_, i) => all.add(i));
+                                                    parsedRows.forEach((_: string[], i: number) => all.add(i));
                                                     setSelectedRows(all);
                                                 }} className="text-xs font-bold text-amber-600 hover:underline">Select All</button>
                                                 <button onClick={() => setSelectedRows(new Set())} className="text-xs font-bold text-slate-500 hover:underline">Clear</button>
@@ -883,7 +890,7 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                             const maxRev = parseFloat(filterMaxRevenue) || Infinity;
                                             const stateFilter = filterState.trim().toUpperCase().split(',').map(s => s.trim()).filter(Boolean);
 
-                                            const filteredIndices = parsedRows.map((row, idx) => {
+                                            const filteredIndices = parsedRows.map((row: string[], idx: number) => {
                                                 let rev = 0;
                                                 let email = '';
                                                 let st = '';
@@ -928,7 +935,7 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                                                 </tr>
                                                             </thead>
                                                             <tbody className="divide-y divide-slate-100">
-                                                                {filteredIndices.map(idx => {
+                                                                {filteredIndices.map((idx: number) => {
                                                                     const row = parsedRows[idx];
                                                                     const isSelected = selectedRows.has(idx);
                                                                     const quality = aiLeads[idx]?.quality || 'minimal';

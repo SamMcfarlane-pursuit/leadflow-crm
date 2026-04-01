@@ -12,7 +12,9 @@ export const Sidebar = () => {
     const isActive = (path: string) => pathname === path;
     const { openAddLead } = useModal();
     const [mounted, setMounted] = useState(false);
-    useEffect(() => setMounted(true), []);
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     return (
         <aside className="hidden md:flex w-16 hover:w-52 flex-shrink-0 flex-col py-5 sticky top-0 h-screen z-20 transition-all duration-300 overflow-hidden group/sidebar" style={{ background: 'linear-gradient(to bottom, #1a1108, #1a1108, #0f0a04)' }}>
