@@ -1,15 +1,18 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, BarChart3, KanbanSquare, ClipboardList, Settings, Plus } from 'lucide-react';
+import { LayoutDashboard, BarChart3, KanbanSquare, ClipboardList, Settings, Plus, LogOut } from 'lucide-react';
+import { UserButton } from '@clerk/nextjs';
 import { useModal } from '@/context/ModalContext';
 
 export const MobileNav = () => {
     const pathname = usePathname();
     const isActive = (path: string) => pathname === path;
     const { openAddLead } = useModal();
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { setMounted(true); }, []);
 
     return (
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl border-t border-slate-200/60 flex justify-around items-end px-1 pt-1.5 pb-2 z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]" style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}>
@@ -31,7 +34,24 @@ export const MobileNav = () => {
             </button>
 
             <MobileNavItem href="/analytics" icon={<BarChart3 size={19} />} label="Analytics" active={isActive('/analytics')} />
-            <MobileNavItem href="/settings" icon={<Settings size={19} />} label="More" active={isActive('/settings') || isActive('/activity')} />
+
+            {/* Account / Sign Out */}
+            <div className="relative flex flex-col items-center justify-center px-2 py-1.5 min-w-[48px]">
+                {mounted ? (
+                    <UserButton
+                        afterSignOutUrl="/sign-in"
+                        appearance={{
+                            elements: {
+                                avatarBox: "w-7 h-7",
+                                userButtonTrigger: "focus:shadow-none",
+                            },
+                        }}
+                    />
+                ) : (
+                    <div className="w-7 h-7 rounded-full" style={{ backgroundColor: 'rgba(224,159,54,0.15)' }} />
+                )}
+                <span className="text-[10px] font-semibold mt-0.5" style={{ color: '#8a7a6a' }}>Account</span>
+            </div>
         </nav>
     );
 };
