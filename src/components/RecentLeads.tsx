@@ -32,12 +32,22 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ onViewSession, onAnalyze }) =
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            setFilters({
-                ...filters,
-                search: searchInput || undefined,
-                temperature: tempFilter !== 'All' ? tempFilter : undefined,
-                minScore: scoreFilter !== 'All' ? Number(scoreFilter) : undefined,
-            });
+            const newSearch = searchInput || undefined;
+            const newTemp = tempFilter !== 'All' ? tempFilter : undefined;
+            const newScore = scoreFilter !== 'All' ? Number(scoreFilter) : undefined;
+            
+            if (
+                filters.search !== newSearch ||
+                filters.temperature !== newTemp ||
+                filters.minScore !== newScore
+            ) {
+                setFilters({
+                    ...filters,
+                    search: newSearch,
+                    temperature: newTemp,
+                    minScore: newScore,
+                });
+            }
         }, 300);
         return () => clearTimeout(timer);
     }, [searchInput, tempFilter, scoreFilter, filters, setFilters]);
