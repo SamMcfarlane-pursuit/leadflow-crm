@@ -81,11 +81,17 @@ export const LeadProvider = ({ children }: { children: ReactNode }) => {
     const [totalLeads, setTotalLeads] = useState(0);
     const [filters, setFiltersState] = useState<LeadFilters>({});
 
-    // Fetch a page of leads
+    // Stable reference to current filters for use in callbacks
+    const filtersRef = React.useRef<LeadFilters>(filters);
+    useEffect(() => {
+        filtersRef.current = filters;
+    }, [filters]);
+    // Fetch a page of leads - STABLE
     const fetchPage = useCallback(async (pageNum: number, currentFilters?: LeadFilters) => {
         setIsLoading(true);
         try {
-            const result = await getLeadsPaginated(pageNum, PAGE_SIZE, currentFilters || filters);
+            const activeFilters = currentFilters || filtersRef.current;
+            const result = await getLeadsPaginated(pageNum, PAGE_SIZE, activeFilters);
             if (result.success) {
                 setLeads(result.leads || []);
                 setTotalPages(result.totalPages || 1);
@@ -97,7 +103,7 @@ export const LeadProvider = ({ children }: { children: ReactNode }) => {
         } finally {
             setIsLoading(false);
         }
-    }, [filters]);
+    }, []); // Stable reference
 
     // Fetch aggregated stats
     const refreshStats = useCallback(async () => {
@@ -129,9 +135,10 @@ export const LeadProvider = ({ children }: { children: ReactNode }) => {
         await fetchPage(newPage);
     }, [fetchPage]);
 
-    // Update filters and reset to page 1
+    // Update filters and reset to page 1 - STABLE
     const setFilters = useCallback(async (newFilters: LeadFilters) => {
         setFiltersState(newFilters);
+        // Pass the new filters directly to fetchPage to ensure we don't wait for state sync
         await fetchPage(1, newFilters);
     }, [fetchPage]);
 

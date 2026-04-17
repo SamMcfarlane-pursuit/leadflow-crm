@@ -30,6 +30,20 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ onViewSession, onAnalyze }) =
     const [tempFilter, setTempFilter] = useState<TempFilter>('All');
     const [scoreFilter, setScoreFilter] = useState<string>('All');
 
+    // Sync local state from context (reverse sync for global changes)
+    useEffect(() => {
+        if (filters.search !== undefined && filters.search !== searchInput) {
+            setSearchInput(filters.search || '');
+        }
+        if (filters.temperature !== undefined && filters.temperature !== tempFilter) {
+            setTempFilter((filters.temperature as TempFilter) || 'All');
+        }
+        if (filters.minScore !== undefined && String(filters.minScore) !== scoreFilter) {
+            setScoreFilter(String(filters.minScore) || 'All');
+        }
+    }, [filters]);
+
+    // Push local state changes to context (debounced)
     useEffect(() => {
         const timer = setTimeout(() => {
             const nextFilters = {
@@ -39,7 +53,6 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ onViewSession, onAnalyze }) =
                 minScore: scoreFilter !== 'All' ? Number(scoreFilter) : undefined,
             };
             
-            // Deep equality check to prevent recursive context updates
             const hasChanged = 
                 filters.search !== nextFilters.search ||
                 filters.temperature !== nextFilters.temperature ||
@@ -48,7 +61,7 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ onViewSession, onAnalyze }) =
             if (hasChanged) {
                 setFilters(nextFilters);
             }
-        }, 300);
+        }, 400); // Slightly longer debounce for smoother feeling
         return () => clearTimeout(timer);
     }, [searchInput, tempFilter, scoreFilter, setFilters, filters]);
 
