@@ -209,16 +209,24 @@ export const LeadProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [isSyncing, refreshLeads]);
 
+    const contextValue = React.useMemo(() => ({
+        leads, logs, stats,
+        page, totalPages, totalLeads, pageSize: PAGE_SIZE,
+        filters, setFilters,
+        addLead, bulkAdd, updateLeadStage, addLog,
+        goToPage, refreshLeads, refreshStats,
+        syncSheets, isSyncing, lastSyncTime, lastSyncResult,
+        isLoading,
+    }), [
+        leads, logs, stats, page, totalPages, totalLeads,
+        filters, setFilters, addLead, bulkAdd, updateLeadStage,
+        addLog, goToPage, refreshLeads, refreshStats,
+        syncSheets, isSyncing, lastSyncTime, lastSyncResult,
+        isLoading
+    ]);
+
     return (
-        <LeadContext.Provider value={{
-            leads, logs, stats,
-            page, totalPages, totalLeads, pageSize: PAGE_SIZE,
-            filters, setFilters,
-            addLead, bulkAdd, updateLeadStage, addLog,
-            goToPage, refreshLeads, refreshStats,
-            syncSheets, isSyncing, lastSyncTime, lastSyncResult,
-            isLoading,
-        }}>
+        <LeadContext.Provider value={contextValue}>
             {children}
         </LeadContext.Provider>
     );

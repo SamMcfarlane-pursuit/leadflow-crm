@@ -32,25 +32,25 @@ const RecentLeads: React.FC<RecentLeadsProps> = ({ onViewSession, onAnalyze }) =
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            const newSearch = searchInput || undefined;
-            const newTemp = tempFilter !== 'All' ? tempFilter : undefined;
-            const newScore = scoreFilter !== 'All' ? Number(scoreFilter) : undefined;
+            const nextFilters = {
+                ...filters,
+                search: searchInput || undefined,
+                temperature: tempFilter !== 'All' ? tempFilter : undefined,
+                minScore: scoreFilter !== 'All' ? Number(scoreFilter) : undefined,
+            };
             
-            if (
-                filters.search !== newSearch ||
-                filters.temperature !== newTemp ||
-                filters.minScore !== newScore
-            ) {
-                setFilters({
-                    ...filters,
-                    search: newSearch,
-                    temperature: newTemp,
-                    minScore: newScore,
-                });
+            // Deep equality check to prevent recursive context updates
+            const hasChanged = 
+                filters.search !== nextFilters.search ||
+                filters.temperature !== nextFilters.temperature ||
+                filters.minScore !== nextFilters.minScore;
+
+            if (hasChanged) {
+                setFilters(nextFilters);
             }
         }, 300);
         return () => clearTimeout(timer);
-    }, [searchInput, tempFilter, scoreFilter, filters, setFilters]);
+    }, [searchInput, tempFilter, scoreFilter, setFilters, filters]);
 
     const handleExport = () => {
         if (!leads.length) return;

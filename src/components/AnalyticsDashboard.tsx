@@ -24,58 +24,76 @@ function formatAxisValue(value: number): string {
 }
 
 const AnalyticsDashboard: React.FC<MetricsProps> = ({ leads, totalLeads, stats: globalStats }) => {
-    // Revenue chart data
-    const revenueData = leads
-        .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-        .map((lead, index) => ({
-            name: lead.businessName.length > 10 ? lead.businessName.substring(0, 10) + '…' : lead.businessName,
-            revenue: lead.revenue,
-            cumulative: leads.slice(0, index + 1).reduce((sum, l) => sum + l.revenue, 0),
-            score: lead.score,
-        }));
+    // Memoize all calculations to prevent expensive re-computations on every render
+    const { revenueData, tierCounts, metrics, totals } = React.useMemo(() => {
+        // 1. Safe Sort (Clone to avoid mutating the prop)
+        const sortedLeads = [...leads].sort((a, b) => 
+            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        );
 
-    // Lead segmentation
-    const tierCounts = [
-        { name: 'Cold (<100k)', value: leads.filter(l => l.tier === '100k_Under').length, color: '#94a3b8' },
-        { name: 'Warm (100-500k)', value: leads.filter(l => l.tier === '101k_500k').length, color: '#f59e0b' },
-        { name: 'Hot (500k+)', value: leads.filter(l => l.tier === '500k_Plus').length, color: '#f43f5e' }
-    ].filter(d => d.value > 0);
+        // 2. Efficient O(N) Cumulative Sum and Transform
+        let runningTotal = 0;
+        const revData = sortedLeads.map((lead) => {
+            runningTotal += lead.revenue;
+            return {
+                name: lead.businessName.length > 10 ? lead.businessName.substring(0, 10) + '…' : lead.businessName,
+                revenue: lead.revenue,
+                cumulative: runningTotal,
+                score: lead.score,
+            };
+        });
 
-    const totalRevenue = leads.reduce((sum, l) => sum + l.revenue, 0);
-    const avgRevenue = leads.length > 0 ? totalRevenue / leads.length : 0;
-    const whales = leads.filter(l => l.tier === '500k_Plus').length;
-    const avgScore = leads.length > 0 ? Math.round(leads.reduce((s, l) => s + l.score, 0) / leads.length) : 0;
+        // 3. Lead segmentation
+        const counts = [
+            { name: 'Cold (<100k)', value: leads.filter(l => l.tier === '100k_Under').length, color: '#94a3b8' },
+            { name: 'Warm (100-500k)', value: leads.filter(l => l.tier === '101k_500k').length, color: '#f59e0b' },
+            { name: 'Hot (500k+)', value: leads.filter(l => l.tier === '500k_Plus').length, color: '#f43f5e' }
+        ].filter(d => d.value > 0);
 
-    const metrics = [
-        {
-            label: 'Pipeline Value',
-            value: formatCompact(totalRevenue),
-            icon: <DollarSign size={20} />,
-            accent: 'accent-blue',
-            iconBg: 'bg-amber-50 text-amber-600',
-        },
-        {
-            label: 'Average Deal',
-            value: formatCompact(avgRevenue),
-            icon: <TrendingUp size={20} />,
-            accent: 'accent-emerald',
-            iconBg: 'bg-emerald-50 text-emerald-600',
-        },
-        {
-            label: 'High Value',
-            value: String(globalStats ? globalStats.hot : whales),
-            icon: <Target size={20} />,
-            accent: 'accent-rose',
-            iconBg: 'bg-rose-50 text-rose-600',
-        },
-        {
-            label: 'Total Leads',
-            value: String(totalLeads ?? leads.length),
-            icon: <Users size={20} />,
-            accent: 'accent-violet',
-            iconBg: 'bg-violet-50 text-violet-600',
-        },
-    ];
+        const totalRevenue = leads.reduce((sum, l) => sum + l.revenue, 0);
+        const avgRevenue = leads.length > 0 ? totalRevenue / leads.length : 0;
+        const whales = leads.filter(l => l.tier === '500k_Plus').length;
+
+        const metricData = [
+            {
+                label: 'Pipeline Value',
+                value: formatCompact(totalRevenue),
+                icon: <DollarSign size={20} />,
+                accent: 'accent-blue',
+                iconBg: 'bg-amber-50 text-amber-600',
+            },
+            {
+                label: 'Average Deal',
+                value: formatCompact(avgRevenue),
+                icon: <TrendingUp size={20} />,
+                accent: 'accent-emerald',
+                iconBg: 'bg-emerald-50 text-emerald-600',
+            },
+            {
+                label: 'High Value',
+                value: String(globalStats ? globalStats.hot : whales),
+                icon: <Target size={20} />,
+                accent: 'accent-rose',
+                iconBg: 'bg-rose-50 text-rose-600',
+            },
+            {
+                label: 'Total Leads',
+                value: String(totalLeads ?? leads.length),
+                icon: <Users size={20} />,
+                accent: 'accent-violet',
+                iconBg: 'bg-violet-50 text-violet-600',
+            },
+        ];
+
+        return {
+            revenueData: revData,
+            tierCounts: counts,
+            metrics: metricData,
+            totals: { totalRevenue, avgRevenue }
+        };
+    }, [leads, totalLeads, globalStats]);
+
+    const { totalRevenue, avgRevenue } = totals;
 
     return (
         <div className="space-y-6">
