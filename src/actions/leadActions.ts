@@ -114,9 +114,9 @@ export async function bulkCreateLeads(leads: BulkLeadData[]) {
     try {
         const userId = await requireAuth();
 
-        // Rate-limit: max 1000 leads per bulk import
-        if (leads.length > 1000) {
-            return { success: false, error: 'Max 1000 leads per import', count: 0 };
+        // Rate-limit: max 2000 leads per bulk import (withstand more information)
+        if (leads.length > 2000) {
+            return { success: false, error: 'Max 2000 leads per import', count: 0 };
         }
 
         const result = await prisma.$transaction(async (tx) => {

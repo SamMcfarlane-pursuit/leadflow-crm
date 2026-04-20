@@ -143,6 +143,22 @@ export default function DashboardView() {
                 </div>
             )}
 
+            {/* GLOBAL REHYDRATION OVERLAY */}
+            {(isSyncing || (isLoading && leads.length > 0)) && (
+                <div className="fixed inset-x-0 top-16 bottom-0 z-40 backdrop-blur-[2px] bg-white/10 flex items-center justify-center animate-in fade-in duration-300">
+                    <div className="bg-white/80 border border-amber-200/50 shadow-2xl rounded-2xl p-6 flex flex-col items-center gap-4 max-w-sm text-center">
+                        <div className="relative">
+                            <RefreshCw size={32} className="text-amber-500 animate-spin" />
+                            <div className="absolute inset-0 blur-xl bg-amber-400/20 animate-pulse" />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-slate-800">Synchronizing Intelligence</h3>
+                            <p className="text-xs text-slate-500 mt-1">Updating lead counts, scores, and pipeline metrics. Please stand by.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* CONTENT */}
             <div className="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-hide">
                 <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">

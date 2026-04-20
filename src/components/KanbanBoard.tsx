@@ -26,10 +26,12 @@ const TEMP_DOT: Record<string, string> = {
 };
 
 export const KanbanBoard: React.FC<KanbanBoardProps> = ({ leads, onStageChange }) => {
-    const columns = STAGES.reduce((acc, stage) => {
-        acc[stage] = leads.filter(l => l.pipelineStage === stage || (!l.pipelineStage && stage === 'New'));
-        return acc;
-    }, {} as Record<PipelineStage, Lead[]>);
+    const columns = React.useMemo(() => {
+        return STAGES.reduce((acc, stage) => {
+            acc[stage] = leads.filter(l => l.pipelineStage === stage || (!l.pipelineStage && stage === 'New'));
+            return acc;
+        }, {} as Record<PipelineStage, Lead[]>);
+    }, [leads]);
 
     const handleDragStart = (e: React.DragEvent, leadId: string) => {
         e.dataTransfer.setData('leadId', leadId);

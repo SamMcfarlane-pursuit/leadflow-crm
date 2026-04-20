@@ -307,9 +307,10 @@ export async function syncFromGoogleSheets(
                 }
             }
 
-            revalidatePath('/dashboard');
-            revalidatePath('/pipeline');
-            revalidatePath('/analytics');
+            // Consistently revalidate all relevant consumer paths
+            ['/dashboard', '/pipeline', '/analytics', '/activity'].forEach(path => {
+                revalidatePath(path);
+            });
 
             return {
                 success: true,
@@ -336,7 +337,7 @@ export async function syncFromGoogleSheets(
             totalRows: 0,
             imported: 0,
             skipped: 0,
-            error: error instanceof Error ? error.message : 'Unknown sync error',
+            error: `Sync error: ${error instanceof Error ? error.message : 'Unknown error'}. Check sheet visibility and format.`,
             syncedAt,
         };
     }

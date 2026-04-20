@@ -124,10 +124,18 @@ export const LeadProvider = ({ children }: { children: ReactNode }) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Refresh current page
-    const refreshLeads = useCallback(async () => {
-        await fetchPage(page);
-        await refreshStats();
+    // Refresh current page (atomic)
+    const refreshLeads = useCallback(async (targetPage?: number) => {
+        setIsLoading(true);
+        const p = targetPage ?? page;
+        try {
+            await Promise.all([
+                fetchPage(p),
+                refreshStats()
+            ]);
+        } finally {
+            setIsLoading(false);
+        }
     }, [page, fetchPage, refreshStats]);
 
     // Navigate to page
@@ -196,16 +204,22 @@ export const LeadProvider = ({ children }: { children: ReactNode }) => {
         setLogs((prev) => [newLog, ...prev]);
     };
 
-    // Sync from Google Sheets
+    // Sync from Google Sheets (Zero-Glitch Protocol)
     const syncSheets = useCallback(async (maxRows: number = 500): Promise<SyncResult | null> => {
         if (isSyncing) return null;
         setIsSyncing(true);
+        setIsLoading(true); // Lock UI during entire sync + re-fetch
         try {
             const result = await syncFromGoogleSheets(maxRows);
             setLastSyncResult(result);
             if (result.success) {
                 setLastSyncTime(result.syncedAt);
-                await refreshLeads();
+                // Atomic rehydration: Reset to page 1 to show new leads
+                setPage(1);
+                await Promise.all([
+                    fetchPage(1),
+                    refreshStats()
+                ]);
             }
             return result;
         } catch (error) {
@@ -213,8 +227,9 @@ export const LeadProvider = ({ children }: { children: ReactNode }) => {
             return null;
         } finally {
             setIsSyncing(false);
+            setIsLoading(false);
         }
-    }, [isSyncing, refreshLeads]);
+    }, [isSyncing, fetchPage, refreshStats]);
 
     const contextValue = React.useMemo(() => ({
         leads, logs, stats,

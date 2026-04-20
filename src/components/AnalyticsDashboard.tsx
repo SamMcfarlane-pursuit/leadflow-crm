@@ -71,14 +71,14 @@ const AnalyticsDashboard: React.FC<MetricsProps> = ({ leads, totalLeads, stats: 
             },
             {
                 label: 'High Value',
-                value: String(globalStats ? globalStats.hot : whales),
+                value: String(globalStats?.hot ?? whales),
                 icon: <Target size={20} />,
                 accent: 'accent-rose',
                 iconBg: 'bg-rose-50 text-rose-600',
             },
             {
                 label: 'Total Leads',
-                value: String(totalLeads ?? leads.length),
+                value: String(globalStats?.total ?? totalLeads ?? leads.length),
                 icon: <Users size={20} />,
                 accent: 'accent-violet',
                 iconBg: 'bg-violet-50 text-violet-600',

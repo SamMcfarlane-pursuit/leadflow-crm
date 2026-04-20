@@ -935,7 +935,7 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                                                 </tr>
                                                             </thead>
                                                             <tbody className="divide-y divide-slate-100">
-                                                                {filteredIndices.map((idx: number) => {
+                                                                {filteredIndices.slice(0, 250).map((idx: number) => {
                                                                     const row = parsedRows[idx];
                                                                     const isSelected = selectedRows.has(idx);
                                                                     const quality = aiLeads[idx]?.quality || 'minimal';
@@ -986,6 +986,13 @@ Corner Bodega\tcontact@bodega.nyc\t$25,000\t555-0404`);
                                                                         </tr>
                                                                     );
                                                                 })}
+                                                                {filteredIndices.length > 250 && (
+                                                                    <tr>
+                                                                        <td colSpan={8} className="px-4 py-4 text-center bg-slate-50 text-slate-500 text-xs font-medium italic border-t border-slate-100">
+                                                                            ... and {filteredIndices.length - 250} more leads are selected for import (preview limited for performance)
+                                                                        </td>
+                                                                    </tr>
+                                                                )}
                                                             </tbody>
                                                         </table>
                                                     </div>
